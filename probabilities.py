@@ -82,31 +82,10 @@ def getCustomersSorted(cust_list,s_serv,s_profit,s_demand):
     for i in cust_list:
         attractivness = s_demand*demand_list.index((i.id,i.demand)) + s_serv* serv_time_list.index((i.id,i.serv_time)) + s_profit*profit_list.index((i.id,i.profit))
         cust_sorted.append((i,attractivness))
-    cust_sorted.sort(key=lambda x:x[1], reverse= True)
+    cust_sorted.sort(key=lambda x:x[1])
     
     return cust_sorted
 
-
-def MinimumInsertions(self):
-    model_is_feasible = True
-    self.sol = Solution()
-    insertions = 0
-
-    while insertions < len(self.customers):
-        best_insertion = CustomerInsertionAllPositions()
-        self.Always_keep_an_empty_route()
-        self.IdentifyMinimumCostInsertion(best_insertion)
-
-        if best_insertion.customer is not None:
-            self.ApplyCustomerInsertionAllPositions(best_insertion)
-            insertions += 1
-        else:
-            print('FeasibilityIssue')
-            model_is_feasible = False
-            break
-
-    if model_is_feasible:
-        self.TestSolution()
 
 
 class BestInsertion(object):
@@ -171,6 +150,7 @@ def calclulateProfit(route_list):
 
 
 
+
 cust_list = getCustomers("instance.csv")
 start = time.time()
 cost_matrix = getCost_Matrix(cust_list)
@@ -186,8 +166,8 @@ a1 = 0
 a2 =0 
 a3 = 0
 
-for a in range(0,100,2):
-    for l in range(0,100-a,2):
+for a in range(0,100,3):
+    for l in range(0,100-a,3):
         apothiki = Customer(0,0,0,0,0,0)
         trucks = 6
         route_list = []
@@ -212,6 +192,7 @@ for a in range(0,100,2):
             a1= weight_serv_time
             a2 = weight_profit
             a3 = weight_demand
+            
         for k in route_list:
             print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY ", k.capacity)
 print("THE BEST I FOUND WAS: ", max_prof)
