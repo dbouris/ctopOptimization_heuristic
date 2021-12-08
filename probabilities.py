@@ -106,7 +106,7 @@ def IdentifyMinimumCostInsertion(node, rt_list):
     best_insertion = BestInsertion()
     for rt in rt_list:
         
-        if rt.capacity + node.demand <= 150 and rt.time + node.serv_time <= 200:
+        if rt.capacity + node.demand <= 150:
             
             for j in range(0, len(rt.route) - 1):
                 A = rt.route[j].id
@@ -116,13 +116,15 @@ def IdentifyMinimumCostInsertion(node, rt_list):
                 costRemoved = cost_matrix[A][B]
                 
                 trialCost = costAdded - costRemoved
+
+                if rt.time + node.serv_time + trialCost <= 200:
                 
-                if trialCost < best_insertion.cost:
-                    
-                    best_insertion.customer = node
-                    best_insertion.route = rt.id
-                    best_insertion.position = j
-                    best_insertion.cost = trialCost
+                    if trialCost < best_insertion.cost:
+                        
+                        best_insertion.customer = node
+                        best_insertion.route = rt.id
+                        best_insertion.position = j
+                        best_insertion.cost = trialCost +node.serv_time
                     
         else:
             continue
@@ -135,7 +137,7 @@ def InsertBestFit(best_fit,route_list):
     r.insert(best_fit.position+1,best_fit.customer)
     route_list[best_fit.route].route = r
     route_list[best_fit.route].capacity += best_fit.customer.demand
-    route_list[best_fit.route].time += best_fit.customer.serv_time
+    route_list[best_fit.route].time +=  best_fit.cost
    
 def calclulateProfit(route_list):
     profit = 0
