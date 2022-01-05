@@ -38,6 +38,36 @@ class BestInsertion(object):
         self.position = None
         self.cl = 10*900
 
+class Solver:
+    def __init__(self, m):
+        self.allNodes = cust_list
+        self.customers = cust_list[1:]
+        self.depot = cust_list[0]
+        self.distanceMatrix = getCost_Matrix(cust_list)
+        self.capacity = 150
+        self.sol = None
+        self.bestSolution = None
+        self.overallBestSol = None
+        self.rcl_size = 6
+
+    def solve(self):
+        for i in range(1):
+            self.SetRoutedFlagToFalseForAllCustomers()
+            self.ApplyNearestNeighborMethod(i)
+            cc = self.sol.cost
+            print(i, 'Constr:', self.sol.cost)
+            # self.MinimumInsertions(i)
+            # self.ReportSolution(self.sol)
+            self.LocalSearch(0)
+            if self.overallBestSol == None or self.overallBestSol.cost > self.sol.cost:
+                self.overallBestSol = self.cloneSolution(self.sol)
+            print(i, 'Const: ', cc, ' LS:', self.sol.cost, 'BestOverall: ', self.overallBestSol.cost)
+            # SolDrawer.draw(i, self.sol, self.allNodes)
+
+        self.sol = self.overallBestSol
+        self.ReportSolution(self.sol)
+        # SolDrawer.draw(10000, self.sol, self.allNodes)
+        return self.sol
 
 
 def getCost_Matrix(c_list):
