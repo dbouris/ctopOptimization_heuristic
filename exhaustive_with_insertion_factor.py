@@ -107,7 +107,7 @@ def IdentifyMinimumCostInsertion(rt_list,cust_list):
 
 
 def getEmptyRoutes(trucks):
-    apothiki = Customer(0,0,0,0,0,0,False)
+    apothiki = Customer(0,23.142,11.736,0,0,0,False)
     route_list = []
 
     for i in range(0,trucks):
