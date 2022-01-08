@@ -726,6 +726,47 @@ solveProblem()
 
 
 
+def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute):
+    best_insertion = BestInsertion()
+    for customer in candidateroute:
+        if customer.added == False:
+
+            for j in range(0, len(newrt.route) - 1):
+                A = newrt.route[j].id
+                B = newrt.route[j + 1].id
+            
+                costAdded = cost_matrix[A][customer.id] + cost_matrix[customer.id][B]
+                costRemoved = cost_matrix[A][B]
+                
+                trialCost = costAdded - costRemoved + customer.serv_time
+                
+
+                if rt.time  + trialCost <= 200:
+                #calculate the insertion criterion
+                    criterion = calculate_insertion_criterion(customer,trialCost)
+                    
+                    if criterion < best_insertion.cl:
+                        
+                        best_insertion.customer = customer
+                        best_insertion.route = rt.id
+                        best_insertion.position = j
+                        best_insertion.time = trialCost 
+                        best_insertion.cl = criterion
+                    
+        else:
+            continue
+    return best_insertion
+
+
+
+
+
+
+
+
+
+
+
 def PairInsertion(pairlist, route_list):
     for pair in pairlist:
         for route in route_list:
@@ -739,7 +780,7 @@ def PairInsertion(pairlist, route_list):
                     candidateroute.remove(nodetoremove)
                     for k in pair.Customers:
                         candidateroute.append(k)
-                    
+
                     newrt = getEmptyRoutes(1)[0]
                     for i in range(0,len(candidateroute)):
                         IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
