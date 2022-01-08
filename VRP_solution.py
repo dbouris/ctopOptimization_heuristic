@@ -103,6 +103,18 @@ class BestInsertion(object):
         self.cl = 10*900
 
 
+class OneRouteBi(object):
+    def __init__(self):
+        self.time = 10*900
+        self.customer = None
+        self.position = None
+        
+
+    def Initialize(self):
+        self.time = 10*900
+        self.customer = None
+        self.position = None
+
 class CandidatePairs:
 
     def __init__(self, customers):
@@ -727,7 +739,7 @@ solveProblem()
 
 
 def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
-    best_insertion = BestInsertion()
+    best_insertion = OneRouteBi()
     for customer in candidateroute:
         if customer.added == False:
 
@@ -751,6 +763,19 @@ def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
     return best_insertion
 
 
+
+def ApplyInsertion(newrt, best):
+    #updates time and capacity of the route
+    newrt.capacity = best.customer.demand
+    newrt.time +=  best.time
+
+    #adds the node to its new position
+    r = newrt.route
+    r.insert(best.position+1,best.customer)
+    newrt.route = r
+
+    best.customer.added = True
+    
 
 
 
@@ -780,8 +805,9 @@ def PairInsertion(pairlist, route_list):
                         i.added = False
 
                     for i in range(0,len(candidateroute)):
-                        IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
-                        InsertBestFit(newrt)
+                        best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
+                        ApplyInsertion(newrt, best)
+                    #check if the newroute's time is OK
                     
 
 
