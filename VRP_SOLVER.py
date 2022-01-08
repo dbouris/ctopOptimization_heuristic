@@ -3,6 +3,8 @@ import math
 from SolutionDrawer import *
 import copy
 
+from exhaustive_with_insertion_factor import IdentifyMinimumCostInsertion
+
 
 class RelocationMove(object):
     def __init__(self):
@@ -684,8 +686,9 @@ def PairInsertion(pairlist):
                         candidateroute.append(k)
 
                     newrt = getEmptyRoutes(1)[0]
-                    for i in range(0,len(candidateroute))
-
+                    for i in range(0,len(candidateroute)):
+                        IdentifyMinimumCostInsertion(newrt,candidateroute)
+                        InsertBestFit(newrt)
                     
 
 
