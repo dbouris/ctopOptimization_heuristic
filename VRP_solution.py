@@ -738,7 +738,7 @@ def PairInsertion(pairlist, route_list):
 
                     newrt = getEmptyRoutes(1)[0]
                     for i in range(0,len(candidateroute)):
-                        IdentifyMinimumCostInsertion(newrt,candidateroute)
+                        IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
                         InsertBestFit(newrt)
                     
 
