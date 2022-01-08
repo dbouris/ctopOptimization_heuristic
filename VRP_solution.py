@@ -739,7 +739,7 @@ def PairInsertion(pairlist, route_list):
                     candidateroute.remove(nodetoremove)
                     for k in pair.Customers:
                         candidateroute.append(k)
-
+                    
                     newrt = getEmptyRoutes(1)[0]
                     for i in range(0,len(candidateroute)):
                         IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
