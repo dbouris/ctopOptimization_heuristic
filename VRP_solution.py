@@ -699,55 +699,6 @@ def generatePairs(cust_list):
     return pairs
 
 
-
-
-def solveProblem():
-    route_list = getEmptyRoutes(6)
-    cust_list = getCustomers("instance.csv")
-
-    cost_matrix = getCost_Matrix(cust_list)
-
-    solve(cust_list, route_list, cost_matrix)
-    DrawSolution(route_list, cust_list)
-    LocalSearch(0, route_list, cost_matrix)
-
-    prof = calclulateProfitRoute(route_list)
-    total_prof = calclulateTotalProfit(prof)
-    print(total_prof)
-    for k in route_list:
-        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
-        
-
-    for i in route_list:
-        print("ROUTE ", i.id)
-        for k in i.route:
-            print(k.id, end = " ")
-        print()
-
-    solve(cust_list, route_list, cost_matrix)
-    prof = calclulateProfitRoute(route_list)
-    total_prof = calclulateTotalProfit(prof)
-    print(total_prof)
-
-    for i in route_list:
-        print("ROUTE ", i.id)
-        for k in i.route:
-            print(k.id, end = " ")
-        print() 
-
-    candidates = generatePairs(cust_list)
-    for x in candidates:
-        cust = x.customers
-        print(cust[0].id, cust[1].id)
-        print()
-    print(len(candidates))
-            
-
-
-solveProblem()
-
-
-
 def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
     best_insertion = OneRouteBi()
     for customer in candidateroute:
@@ -823,7 +774,68 @@ def PairInsertion(pairlist, route_list):
                     route.time = newrt.time
                     route.capacity = newrt.capacity
                     route.route = newrt.route
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulateTotalProfit(prof)
+    print(total_prof)
+    
                     
+
+
+
+
+
+
+
+
+def solveProblem():
+    route_list = getEmptyRoutes(6)
+    cust_list = getCustomers("instance.csv")
+
+    cost_matrix = getCost_Matrix(cust_list)
+
+    solve(cust_list, route_list, cost_matrix)
+    DrawSolution(route_list, cust_list)
+    LocalSearch(0, route_list, cost_matrix)
+
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulateTotalProfit(prof)
+    print(total_prof)
+    for k in route_list:
+        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+        
+
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print()
+
+    solve(cust_list, route_list, cost_matrix)
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulateTotalProfit(prof)
+    print(total_prof)
+
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print() 
+
+    candidates = generatePairs(cust_list)
+    # for x in candidates:
+    #     cust = x.customers
+    #     print(cust[0].id, cust[1].id)
+    #     print()
+    # print(len(candidates))
+
+    PairInsertion(candidates, route_list)
+            
+
+
+solveProblem()
+
+
+
 
                     
 
