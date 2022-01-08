@@ -680,7 +680,16 @@ def PairInsertion(pairlist):
                         continue
                     candidateroute = route.route
                     candidateroute.remove(nodetoremove)
-                    candidateroute.add(pair.)
+                    for k in pair.Customers:
+                        candidateroute.append(k)
+
+                    newrt = getEmptyRoutes(1)[0]
+                    for i in range(0,len(candidateroute))
+
+                    
+
+
+
 
 
 
