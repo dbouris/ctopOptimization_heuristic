@@ -365,7 +365,7 @@ def FindBestRelocationMove(rm):
 def FindBestSwapMove(sm):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
-            for secondRouteIndex in range (3,4):
+            for secondRouteIndex in range (firstRouteIndex, len(route_list)):
                 print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
                 rt2 = route_list[secondRouteIndex]
                 for firstNodeIndex in range (1, len(rt1.route) - 1):
@@ -632,16 +632,16 @@ Max_Capacity = 150
 Max_Profit = 35
 
 
+
 #weigths
 profit_weight = 0.56
 demand_weight = 0.12
 time_weight = 0.32
 
 
-
+#starting point
 route_list = getEmptyRoutes(6)
 cust_list = getCustomers("instance.csv")
-
 cost_matrix = getCost_Matrix(cust_list)
 
 solve()
@@ -664,3 +664,23 @@ for i in route_list:
 
 for k in route_list:
     print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+
+
+
+
+
+def PairInsertion(pairlist):
+    for pair in pairlist:
+        for route in route_list:
+            for nodetoremove in route.route:
+                #check if the profit of the pair is better
+                if pair.TotalProfit >  nodetoremove.profit:
+                    #check if the pair can fit in the route demand wise
+                    if pair.TotalDemand - nodetoremove.demand + route.capacity > 150:
+                        continue
+                    candidateroute = route.route
+                    candidateroute.remove(nodetoremove)
+                    candidateroute.add(pair.)
+
+
+
