@@ -719,3 +719,31 @@ def solveProblem():
 
 
 solveProblem()
+
+
+
+def PairInsertion(pairlist, route_list):
+    for pair in pairlist:
+        for route in route_list:
+            for nodetoremove in route.route:
+                #check if the profit of the pair is better
+                if pair.TotalProfit >  nodetoremove.profit:
+                    #check if the pair can fit in the route demand wise
+                    if pair.TotalDemand - nodetoremove.demand + route.capacity > 150:
+                        continue
+                    candidateroute = route.route
+                    candidateroute.remove(nodetoremove)
+                    for k in pair.Customers:
+                        candidateroute.append(k)
+
+                    newrt = getEmptyRoutes(1)[0]
+                    for i in range(0,len(candidateroute)):
+                        IdentifyMinimumCostInsertion(newrt,candidateroute)
+                        InsertBestFit(newrt)
+                    
+
+
+
+
+
+
