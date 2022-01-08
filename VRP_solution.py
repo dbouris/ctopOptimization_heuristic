@@ -726,7 +726,7 @@ solveProblem()
 
 
 
-def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute):
+def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
     best_insertion = BestInsertion()
     for customer in candidateroute:
         if customer.added == False:
@@ -739,19 +739,12 @@ def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute):
                 costRemoved = cost_matrix[A][B]
                 
                 trialCost = costAdded - costRemoved + customer.serv_time
-                
 
-                if rt.time  + trialCost <= 200:
-                #calculate the insertion criterion
-                    criterion = calculate_insertion_criterion(customer,trialCost)
                     
-                    if criterion < best_insertion.cl:
-                        
-                        best_insertion.customer = customer
-                        best_insertion.route = rt.id
-                        best_insertion.position = j
-                        best_insertion.time = trialCost 
-                        best_insertion.cl = criterion
+                if trialCost < best_insertion.trialcost:
+                    best_insertion.customer = customer
+                    best_insertion.position = j
+                    best_insertion.time = trialCost 
                     
         else:
             continue
