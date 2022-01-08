@@ -714,7 +714,7 @@ def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
                 trialCost = costAdded - costRemoved + customer.serv_time
 
                     
-                if trialCost < best_insertion.trialcost:
+                if trialCost < best_insertion.time:
                     best_insertion.customer = customer
                     best_insertion.position = j
                     best_insertion.time = trialCost 
@@ -746,7 +746,7 @@ def ApplyInsertion(newrt, best):
 
 
 
-def PairInsertion(pairlist, route_list):
+def PairInsertion(pairlist, route_list, cost_matrix):
     for pair in pairlist:
         for route in route_list:
             for nodetoremove in route.route:
@@ -827,8 +827,9 @@ def solveProblem():
     #     print(cust[0].id, cust[1].id)
     #     print()
     # print(len(candidates))
-
-    PairInsertion(candidates, route_list)
+    print("Now the new testing:")
+    print()
+    PairInsertion(candidates, route_list, cost_matrix)
             
 
 
