@@ -285,6 +285,16 @@ def getTotalServCost(route_list, cost_matrix):
                 c += cost_matrix[a.id][b.id]
         return c
 
+def getTotalTime(route_list, cost_matrix):
+    c = 0
+    for route in route_list:
+        for j in range (0, len(route.route) - 1):
+            a = route.route[j]
+            b = route.route[j + 1]
+            c += cost_matrix[a.id][b.id] + a.serv_time
+        
+
+
 
 
 def DrawSolution(route_list, cust_list):
@@ -808,6 +818,9 @@ def PairInsertion(pairlist, route_list):
                         best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
                         ApplyInsertion(newrt, best)
                     #check if the newroute's time is OK
+                    if newrt.time > 200:
+                        continue
+                    
                     
 
 
