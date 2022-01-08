@@ -626,6 +626,7 @@ def solve():
             keep_going = False
 
 
+
 Max_Time = 200
 Max_Capacity = 150
 Max_Profit = 35
@@ -647,18 +648,8 @@ solve()
 DrawSolution(route_list, cust_list)
 LocalSearch(0)
 
-prof = calclulateProfitRoute(route_list)
-total_prof = calclulateTotalProfit(prof)
-print(total_prof)
-for k in route_list:
-    print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
     
 
-for i in route_list:
-    print("ROUTE ", i.id)
-    for k in i.route:
-        print(k.id, end = " ")
-    print()
 
 solve()
 prof = calclulateProfitRoute(route_list)
@@ -671,4 +662,5 @@ for i in route_list:
         print(k.id, end = " ")
     print() 
 
-
+for k in route_list:
+    print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
