@@ -6,6 +6,10 @@ from itertools import combinations
 import pprint
 
 
+
+# Creation of classes
+
+
 class RelocationMove(object):
     def __init__(self):
         self.originRoutePosition = None
@@ -114,7 +118,7 @@ class CandidatePairs:
 
 
 
-
+#  Methods
 
 
 
