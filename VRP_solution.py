@@ -764,8 +764,8 @@ def PairInsertion(pairlist, route_list, cost_matrix):
 
                     for i in candidateroute:
                         i.added = False
-
-                    for i in range(0,len(candidateroute)):
+  
+                    for i in range(0,len(candidateroute)):  
                         best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
                         ApplyInsertion(newrt, best)
                     #check if the newroute's time is OK
@@ -825,8 +825,14 @@ def solveProblem():
     # for x in candidates:
     #     cust = x.customers
     #     print(cust[0].id, cust[1].id)
+    #     print("|||||||")
+    #     print(x.totalProfit)
+    #     print("|||||||")
+    #     print(x.totalDemand)
+    #     print("|||||||")
+    #     print(x.totalServiceTime)
     #     print()
-    # print(len(candidates))
+
     print("Now the new testing:")
     print()
     PairInsertion(candidates, route_list, cost_matrix)
