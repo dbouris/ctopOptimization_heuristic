@@ -250,7 +250,7 @@ def calclulateProfitRoute(route_list):
         profit.append(prof)
     return profit
 
-def calclulateTotalProfit(prof):
+def calclulatetotalProfit(prof):
     total_prof = 0
     for i in prof:
         total_prof = total_prof +i
@@ -276,7 +276,7 @@ def getServCost(route_list):
         serv_cost.append(cost)
     return serv_cost
 
-def getTotalServCost(route_list, cost_matrix):
+def gettotalServCost(route_list, cost_matrix):
         c = 0
         for route in route_list:
             for j in range (0, len(route.route) - 1):
@@ -285,7 +285,7 @@ def getTotalServCost(route_list, cost_matrix):
                 c += cost_matrix[a.id][b.id]
         return c
 
-def getTotalTime(route_list, cost_matrix):
+def gettotalTime(route_list, cost_matrix):
     c = 0
     for route in route_list:
         for j in range (0, len(route.route) - 1):
@@ -652,7 +652,7 @@ def LocalSearch(operator, route_list, cost_matrix):
             
 
 
-            if (getTotalServCost(route_list,cost_matrix) < getTotalServCost(bestSolution, cost_matrix)):
+            if (gettotalServCost(route_list,cost_matrix) < gettotalServCost(bestSolution, cost_matrix)):
                 bestSolution = copy.deepcopy(route_list)
 
             localSearchIterator = localSearchIterator + 1
@@ -751,13 +751,13 @@ def PairInsertion(pairlist, route_list):
         for route in route_list:
             for nodetoremove in route.route:
                 #check if the profit of the pair is better
-                if pair.TotalProfit >  nodetoremove.profit:
+                if pair.totalProfit >  nodetoremove.profit:
                     #check if the pair can fit in the route demand wise
-                    if pair.TotalDemand - nodetoremove.demand + route.capacity > 150:
+                    if pair.totalDemand - nodetoremove.demand + route.capacity > 150:
                         continue
                     candidateroute = route.route
                     candidateroute.remove(nodetoremove)
-                    for k in pair.Customers:
+                    for k in pair.customers:
                         candidateroute.append(k)
 
                     newrt = getEmptyRoutes(1)[0]
@@ -766,7 +766,7 @@ def PairInsertion(pairlist, route_list):
                         i.added = False
 
                     for i in range(0,len(candidateroute)):
-                        best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute)
+                        best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
                         ApplyInsertion(newrt, best)
                     #check if the newroute's time is OK
                     if newrt.time > 200:
@@ -775,7 +775,7 @@ def PairInsertion(pairlist, route_list):
                     route.capacity = newrt.capacity
                     route.route = newrt.route
     prof = calclulateProfitRoute(route_list)
-    total_prof = calclulateTotalProfit(prof)
+    total_prof = calclulatetotalProfit(prof)
     print(total_prof)
     
                     
@@ -798,7 +798,7 @@ def solveProblem():
     LocalSearch(0, route_list, cost_matrix)
 
     prof = calclulateProfitRoute(route_list)
-    total_prof = calclulateTotalProfit(prof)
+    total_prof = calclulatetotalProfit(prof)
     print(total_prof)
     for k in route_list:
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
@@ -812,7 +812,7 @@ def solveProblem():
 
     solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
-    total_prof = calclulateTotalProfit(prof)
+    total_prof = calclulatetotalProfit(prof)
     print(total_prof)
 
     for i in route_list:
