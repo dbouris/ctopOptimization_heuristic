@@ -820,7 +820,11 @@ def PairInsertion(pairlist, route_list):
                     #check if the newroute's time is OK
                     if newrt.time > 200:
                         continue
+                    route.time = newrt.time
+                    route.capacity = newrt.capacity
+                    route.route = newrt.route
                     
+
                     
 
 
