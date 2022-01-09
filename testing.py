@@ -30,27 +30,6 @@ class RelocationMove(object):
         self.moveCost = 10 ** 9
 
 
-class PairInsertionMove(object):
-    def __init__(self):
-        self.route = None
-        self.nodetoremove = None
-        self.route_list = None
-        self.route_time = None
-        self.capacity_change = None
-        self.profit_added = -1
-        self.pair_added = None
-
-    def Initialize(self):
-        self.route = None
-        self.nodetoremove = None
-        self.route_list = None
-        self.route_time = None
-        self.pair_added = None
-        self.capacity_change = None
-        self.profit_added = -1
-        
-
-
 class SwapMove(object):
     def __init__(self):
         self.positionOfFirstRoute = None
@@ -433,7 +412,7 @@ def FindBestSwapMove(sm, route_list, cost_matrix):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
             for secondRouteIndex in range (3,4):
-                #print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
+                print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
                 rt2 = route_list[secondRouteIndex]
                 for firstNodeIndex in range (1, len(rt1.route) - 1):
                     startOfSecondNodeIndex = 1
@@ -450,7 +429,7 @@ def FindBestSwapMove(sm, route_list, cost_matrix):
                         b2 = rt2.route[secondNodeIndex]
                         c2 = rt2.route[secondNodeIndex + 1]
 
-                        #print("CHECKING:", b1.id , "WITH: ", b2.id)
+                        print("CHECKING:", b1.id , "WITH: ", b2.id)
                         moveCost = None
                         costChangeFirstRoute = None
                         costChangeSecondRoute = None
@@ -469,10 +448,10 @@ def FindBestSwapMove(sm, route_list, cost_matrix):
                                 moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                         else:
                             if rt1.capacity - b1.demand + b2.demand > 150:
-                                #print("DOES NOT FIT IN R1")
+                                print("DOES NOT FIT IN R1")
                                 continue
                             if rt2.capacity - b2.demand + b1.demand > 150:
-                                #print("DOES NOT FIT IN R2")
+                                print("DOES NOT FIT IN R2")
                                 continue
 
                             costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
@@ -484,13 +463,13 @@ def FindBestSwapMove(sm, route_list, cost_matrix):
                             costChangeSecondRoute = costAdded2 - costRemoved2 + b1.serv_time - b2.serv_time
                             
                             if rt1.time + costChangeFirstRoute > 200:
-                                #print("TIME 1: ", rt1.time + costChangeFirstRoute)
-                                #print("TIME VIOLATION IN ROUTE 1")
+                                print("TIME 1: ", rt1.time + costChangeFirstRoute)
+                                print("TIME VIOLATION IN ROUTE 1")
                                 continue
 
                             if rt2.time + costChangeSecondRoute > 200:
-                                #print("TIME 1: ", rt2.time + costChangeSecondRoute)
-                                #print("TIME VIOLATION IN ROUTE 2")
+                                print("TIME 1: ", rt2.time + costChangeSecondRoute)
+                                print("TIME VIOLATION IN ROUTE 2")
                                 continue
 
                             moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
@@ -620,7 +599,7 @@ def UpdateRouteCostAndLoad(rt, cost_matrix):
     rt.time = tc
 
 
-def LocalSearch(operator, route_list, cost_matrix, pairlist):
+def LocalSearch(operator, route_list, cost_matrix):
         bestSolution = copy.deepcopy(route_list)
         terminationCondition = False
         localSearchIterator = 0
@@ -649,7 +628,7 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist):
                         print(rm.moveCost)
                         print("FAILED")
             elif operator == 1:
-                FindBestSwapMove(sm ,route_list, cost_matrix)
+                FindBestSwapMove(sm)
                 if sm.positionOfFirstRoute is not None:
                     if sm.moveCost < 0:
                         ApplySwapMove(sm)
@@ -670,27 +649,11 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist):
                         terminationCondition = True
                         print("FAILED")
                         print(top.moveCost)
-            elif operator == 3:
-                best: PairInsertionMove = PairInsertion(pairlist, route_list, cost_matrix)
-                if best.profit_added > 0:
-                        ApplyPairMove(best, route_list)
-                        print("                                                             MADE A TWO PAIRMOVE")
-                        print(best.pair_added.totalProfit)
-                        print(best.nodetoremove.profit)
-                        opt = opt + 1
-                else:
-                    terminationCondition = True
-                    print("FAILED")
-
             
 
 
-           
-            bestSolution = copy.deepcopy(route_list)
-            prof = calclulateProfitRoute(bestSolution)
-            total_prof = calclulatetotalProfit(prof)
-            print(total_prof)
-            
+            if (gettotalServCost(route_list,cost_matrix) < gettotalServCost(bestSolution, cost_matrix)):
+                bestSolution = copy.deepcopy(route_list)
 
             localSearchIterator = localSearchIterator + 1
         print("RELOCATIONS: ", reloc)
@@ -775,13 +738,7 @@ def ApplyInsertion(newrt, best):
     best.customer.added = True
     
 
-def ApplyPairMove(best : PairInsertionMove,route_list):
-    route_list[best.route].route = best.route_list
-    route_list[best.route].time = best.route_time
-    route_list[best.route].capacity = route_list[best.route].capacity + best.capacity_change
-    best.pair_added.customers[0].added = True
-    best.pair_added.customers[1].added = True
-    best.nodetoremove.added = False
+
 
 
 
@@ -790,8 +747,6 @@ def ApplyPairMove(best : PairInsertionMove,route_list):
 
 
 def PairInsertion(pairlist, route_list, cost_matrix):
-    
-    best = PairInsertionMove()
     for pair in pairlist:
         #print("THE PAIR EVALUATING IS: ", pair.customers[0].id, pair.customers[1].id)
         if pair.customers[0].added == False and pair.customers[1].added == False:
@@ -821,45 +776,41 @@ def PairInsertion(pairlist, route_list, cost_matrix):
                         
 
                         newrt = getEmptyRoutes(1)[0]
-                        #print("CANDIDATE ROUTE: ")
+                        print("CANDIDATE ROUTE: ")
                         for i in candidateroute:
                             i.added = False
-                            #print(i.id, end = " ")
-                        #print()
+                            print(i.id, end = " ")
+                        print()
                         
                         for i in range(0,len(candidateroute)):
-                            best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
-                            ApplyInsertion(newrt, best_inser)
-
-                        pair.customers[0].added = False
-                        pair.customers[1].added = False
-                        
+                            best = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                            ApplyInsertion(newrt, best)
                         #check if the newroute's time is OK
                         
                         # print("THE NEW ROUTE TO EVALUATE IS: ")
                         # for i in newrt.route:
                         #     print(i.id ,end = " ")
                         # print()
-                        profit =  pair.totalProfit - rt[nodeIndextoremove].profit 
 
                         if newrt.time > 200:
-                            #print(gettotalTime(cost_matrix, newrt))
+                            print(gettotalTime(cost_matrix, newrt))
                             # print("THE TIME IS: ", newrt.time)
                             # print("                                                             THE NEW ROUTES TIME IS NOT OK ")
                             continue
-                        
-                        #print("                                                                     WE HAVE A NEW ROUTE")
-                        if profit > best.profit_added:
-                            best.profit_added = profit
-                            best.route = route.id
-                            best.route_list = newrt.route
-                            best.route_time = newrt.time
-                            best.pair_added = pair
-                            best.nodetoremove = rt[nodeIndextoremove]
-                            best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - rt[nodeIndextoremove].demand
-    return best
-           
-    
+                        route.time = newrt.time
+                        route.capacity = newrt.capacity
+                        route.route = newrt.route
+                        pair.customers[0].added = True
+                        pair.customers[1].added = True
+                        print("                                                                     WE HAVE A NEW ROUTE")
+                        for i in route.route:
+                            print(i.id ,end = " ")
+                        print()
+
+                
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
            
 
 
@@ -872,8 +823,7 @@ def solveProblem():
 
     solve(cust_list, route_list, cost_matrix)
     #DrawSolution(route_list, cust_list)
-    candidates = generatePairs(cust_list)
-    LocalSearch(0, route_list, cost_matrix, candidates)
+    LocalSearch(0, route_list, cost_matrix)
 
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
@@ -882,35 +832,25 @@ def solveProblem():
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
         
 
-    
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print()
+
     solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
-
-    
-
-    LocalSearch(3, route_list, cost_matrix, candidates)
 
     for i in route_list:
         print("ROUTE ", i.id)
         for k in i.route:
             print(k.id, end = " ")
         print() 
-    
-    for k in route_list:
-        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+        
 
-    LocalSearch(0, route_list, cost_matrix, candidates)
-    LocalSearch(1, route_list, cost_matrix, candidates)
-
-    solve(cust_list, route_list, cost_matrix)
-    prof = calclulateProfitRoute(route_list)
-    total_prof = calclulatetotalProfit(prof)
-    print(total_prof)
-
-                                                            
-    
+    candidates = generatePairs(cust_list)
     # for x in candidates:
     #     cust = x.customers
     #     print(cust[0].id, cust[1].id)
@@ -922,9 +862,9 @@ def solveProblem():
     #     print(x.totalServiceTime)
     #     print()
 
-    # print("Now the new testing:")
-    # print()
-    # PairInsertion(candidates, route_list, cost_matrix)
+    print("Now the new testing:")
+    print()
+    PairInsertion(candidates, route_list, cost_matrix)
             
 
 
