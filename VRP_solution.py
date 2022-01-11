@@ -39,6 +39,7 @@ class PairInsertionMove(object):
         self.capacity_change = None
         self.profit_added = -1
         self.pair_added = None
+        self.pservedremove=None
 
     def Initialize(self):
         self.route = None
@@ -48,6 +49,7 @@ class PairInsertionMove(object):
         self.pair_added = None
         self.capacity_change = None
         self.profit_added = -1
+        self.pservedremove=None
         
 
 
@@ -620,7 +622,7 @@ def UpdateRouteCostAndLoad(rt, cost_matrix):
     rt.time = tc
 
 
-def LocalSearch(operator, route_list, cost_matrix, pairlist):
+def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserved):
         bestSolution = copy.deepcopy(route_list)
         terminationCondition = False
         localSearchIterator = 0
@@ -681,6 +683,18 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist):
                 else:
                     terminationCondition = True
                     print("FAILED")
+            elif operator == 4:
+                best: PairInsertionMove = TwoPairExchange(route_list, cost_matrix, pairlist2, pairserved)
+                if best.profit_added > 0:
+                        print("hi")
+                        ApplyPairMoveServed(best, route_list)
+                        print("                                                             MADE A TWO PAIRMOVE")
+                        print(best.pair_added.totalProfit)
+                        #print(best.nodetoremove.profit)
+                        opt = opt + 1
+                else:
+                    terminationCondition = True
+                    print("FAILED")
 
             
 
@@ -724,6 +738,21 @@ def generatePairs(cust_list):
     customers = []
     for x in cust_list:
         if (x.added == False):
+            customers.append(x)
+
+    combinationPairs = combinations(customers, 2)
+
+    pairs = []
+    for x in combinationPairs:
+        candidate = CandidatePairs(x)
+        pairs.append(candidate)
+
+    return pairs
+
+def generateServedPairs(cust_list):
+    customers = []
+    for x in cust_list:
+        if (x.added == True):
             customers.append(x)
 
     combinationPairs = combinations(customers, 2)
@@ -783,7 +812,14 @@ def ApplyPairMove(best : PairInsertionMove,route_list):
     best.pair_added.customers[1].added = True
     best.nodetoremove.added = False
 
-
+def ApplyPairMoveServed(best : PairInsertionMove,route_list):
+    route_list[best.route].route = best.route_list
+    route_list[best.route].time = best.route_time
+    route_list[best.route].capacity = route_list[best.route].capacity + best.capacity_change
+    best.pair_added.customers[0].added = True
+    best.pair_added.customers[1].added = True
+    best.pservedremove.customers[0].added=False
+    best.pservedremove.customers[1].added=False
 
 
 
@@ -857,10 +893,55 @@ def PairInsertion(pairlist, route_list, cost_matrix):
                             best.pair_added = pair
                             best.nodetoremove = rt[nodeIndextoremove]
                             best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - rt[nodeIndextoremove].demand
+                            
     return best
            
     
-           
+def TwoPairExchange(route_list, cost_matrix, pairlist, pairserved): 
+    best = PairInsertionMove()
+    for pair in pairlist:       
+        if pair.customers[0].added == False and pair.customers[1].added == False:
+            for i in range(0,len(route_list)-1):                                
+                for pserved in pairserved[i]:
+                    if pserved.customers[0].added == True and pserved.customers[1].added == True:
+                         if pair.totalProfit >  pserved.totalProfit: 
+                             
+                             if route_list[i].capacity - pserved.totalDemand + pair.totalDemand > 150:
+                                 #print("CAPACITY ISSUE")
+                                 continue
+                             
+                             if route_list[i].time - pserved.totalServiceTime + pair.totalServiceTime > 200 :
+                                 #print("CAPACITY ISSUE")
+                                 continue
+                            
+                             candidateroute = route_list[i].route[1:len(route_list[i].route)-1]                             
+                             candidateroute.remove(pserved.customers[0])
+                             candidateroute.remove(pserved.customers[1])                             
+                             for k in pair.customers:
+                                 candidateroute.append(k)
+                             newrt = getEmptyRoutes(1)[0]
+                             for c in candidateroute:
+                                 c.added = False
+                             for j in range(0,len(candidateroute)):
+                                 best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                                 ApplyInsertion(newrt, best_inser)
+                             pair.customers[0].added = False
+                             pair.customers[1].added = False
+                             profit =  pair.totalProfit - pserved.totalProfit
+                            
+                             if newrt.time > 200:
+                                 continue                             
+                             if profit > best.profit_added:                                 
+                                 best.profit_added = profit 
+                                 best.route = route_list[i].id
+                                 best.route_list = newrt.route
+                                 best.route_time = newrt.time
+                                 best.pair_added = pair
+                                 best.pservedremove = pserved
+                                 best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - (pserved.customers[0].demand + pserved.customers[1].demand)
+                                 
+    return best
+     
 
 
 
@@ -873,7 +954,9 @@ def solveProblem():
     solve(cust_list, route_list, cost_matrix)
     #DrawSolution(route_list, cust_list)
     candidates = generatePairs(cust_list)
-    LocalSearch(0, route_list, cost_matrix, candidates)
+    servedpairs=[]
+    candidates2=[]
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
 
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
@@ -888,9 +971,16 @@ def solveProblem():
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
 
+    candidates2 = generatePairs(cust_list)  
     
+    for r in route_list:
+        
+        servedpairs.append(generateServedPairs(r.route))   
 
-    LocalSearch(3, route_list, cost_matrix, candidates)
+    
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    
+    LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs)
 
     for i in route_list:
         print("ROUTE ", i.id)
@@ -901,16 +991,33 @@ def solveProblem():
     for k in route_list:
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
 
-    LocalSearch(0, route_list, cost_matrix, candidates)
-    LocalSearch(1, route_list, cost_matrix, candidates)
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    LocalSearch(1, route_list, cost_matrix, candidates,candidates2,servedpairs)
 
     solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
+    f= open("sol.txt","w+")
+    print("Total Profit")
+    f.write("Total Profit\n")
+    print("%d" %total_prof)
+    f.write("%d\n" %total_prof)
+    for i in range(0,len(route_list)):
+        f.write("Route %d\n" %(i+1))
+        print("Route %d" %(i+1))
+        for c in route_list[i].route:            
+            f.write("%d " %c.id)
+            print("%d" %c.id,end =" ")
+        f.write("\n")
+        print("")
+        
 
-                                                            
-    
+     
+    #TwoPairExchange(route_list, cost_matrix, candidates2, servedpairs)
+
+        
+   
     # for x in candidates:
     #     cust = x.customers
     #     print(cust[0].id, cust[1].id)
