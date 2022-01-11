@@ -81,6 +81,8 @@ def calculate_route_details(nodes_sequence):
         rt_load += from_node.demand
         rt_time += from_node.st
         travel_time = distance(from_node, to_node)
+        print("DISTANCE FROM NODE: ", from_node.ID, "TO: ", to_node.ID, "==", travel_time)
+        print("TIME OF NODE: ", from_node.st)
         rt_time += travel_time
     return rt_time, rt_load, rt_profit
 
@@ -107,6 +109,7 @@ def test_solution(file_name, all_nodes, vehicles, capacity, time_limit):
         ids = [int(no_spaces[i]) for i in range(len(no_spaces))]
         nodes_sequence = [all_nodes[idd] for idd in ids]
         rt_time, rt_load, rt_profit = calculate_route_details(nodes_sequence)
+        print("ROUTE: ",i, rt_time)
         if rt_time > time_limit:
             print('Time violation. Route', i, 'total time is', rt_time)
             return
@@ -122,4 +125,4 @@ def test_solution(file_name, all_nodes, vehicles, capacity, time_limit):
 
 
 all_nodes, vehicles, capacity, time_limit = load_model('Instance.txt')
-test_solution('sol_example.txt', all_nodes, vehicles, capacity, time_limit)
+test_solution('sol.txt', all_nodes, vehicles, capacity, time_limit)

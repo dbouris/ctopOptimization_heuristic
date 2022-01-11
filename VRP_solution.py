@@ -1,5 +1,6 @@
 import csv
 import math
+from typing import NewType
 from SolutionDrawer import *
 import copy
 from itertools import combinations
@@ -416,7 +417,7 @@ def FindBestRelocationMove(rm, route_list, cost_matrix):
                         costRemoved = cost_matrix[A.id][B.id] + cost_matrix[B.id][C.id] + cost_matrix[F.id][G.id]
 
                         originRtCostChange = cost_matrix[A.id][C.id] - cost_matrix[A.id][B.id] - cost_matrix[B.id][C.id] 
-                        targetRtCostChange = cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id] - cost_matrix[F.id][G.id]
+                        targetRtCostChange = cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id] - cost_matrix[F.id][G.id] + rt1.route[originNodeIndex].serv_time
 
                         if rt2.time + targetRtCostChange > 200:
                             continue 
@@ -688,7 +689,7 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
                 if best.profit_added > 0:
                         print("hi")
                         ApplyPairMoveServed(best, route_list)
-                        print("                                                             MADE A TWO PAIRMOVE")
+                        print("                                                             MADE A TWO TWOPAIREXCHANGE")
                         print(best.pair_added.totalProfit)
                         #print(best.nodetoremove.profit)
                         opt = opt + 1
@@ -794,7 +795,7 @@ def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
 def ApplyInsertion(newrt, best):
     #updates time and capacity of the route
     newrt.capacity = best.customer.demand
-    newrt.time +=  best.time
+    newrt.time +=  best.time 
 
     #adds the node to its new position
     r = newrt.route
@@ -869,6 +870,7 @@ def PairInsertion(pairlist, route_list, cost_matrix):
 
                         pair.customers[0].added = False
                         pair.customers[1].added = False
+                        
                         
                         #check if the newroute's time is OK
                         
@@ -953,6 +955,11 @@ def solveProblem():
 
     solve(cust_list, route_list, cost_matrix)
     #DrawSolution(route_list, cust_list)
+    
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
+
     candidates = generatePairs(cust_list)
     servedpairs=[]
     candidates2=[]
@@ -974,30 +981,20 @@ def solveProblem():
     candidates2 = generatePairs(cust_list)  
     
     for r in route_list:
-        
         servedpairs.append(generateServedPairs(r.route))   
 
     
-    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs)
-    
     LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs)
-
-    for i in route_list:
-        print("ROUTE ", i.id)
-        for k in i.route:
-            print(k.id, end = " ")
-        print() 
-    
-    for k in route_list:
-        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
-
-    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
-    LocalSearch(1, route_list, cost_matrix, candidates,candidates2,servedpairs)
-
     solve(cust_list, route_list, cost_matrix)
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
+
+   
+
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
+
+
     f= open("sol.txt","w+")
     print("Total Profit")
     f.write("Total Profit\n")
@@ -1012,7 +1009,10 @@ def solveProblem():
         f.write("\n")
         print("")
         
-
+   
+    for k in route_list:
+        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+    
      
     #TwoPairExchange(route_list, cost_matrix, candidates2, servedpairs)
 
