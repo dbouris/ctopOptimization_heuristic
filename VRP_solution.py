@@ -984,9 +984,13 @@ def solveProblem():
         servedpairs.append(generateServedPairs(r.route))   
 
     
-    LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    #LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    
     solve(cust_list, route_list, cost_matrix)
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
+    
+    
 
    
 
