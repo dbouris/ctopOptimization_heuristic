@@ -60,6 +60,7 @@ class SwapMove(object):
         self.timeChangeFirstRt = None
         self.timeChangeSecondRt = None
         self.moveCost = None
+        self.customer = None
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -67,6 +68,7 @@ class SwapMove(object):
         self.positionOfSecondNode = None
         self.timeChangeFirstRt = None
         self.timeChangeSecondRt = None
+        self.customer = None
         self.moveCost = 10 ** 9
 
 class TwoOptMove(object):
@@ -620,17 +622,20 @@ def UpdateRouteCostAndLoad(rt, cost_matrix):
     rt.time = tc
 
 
-def LocalSearch(operator, route_list, cost_matrix, pairlist):
+def LocalSearch(operator, route_list, cost_matrix, pairlist, unserved):
         bestSolution = copy.deepcopy(route_list)
         terminationCondition = False
         localSearchIterator = 0
         reloc = 0
         swaps = 0
         opt = 0 
+        onetoone = 0 
 
         rm = RelocationMove()
         sm = SwapMove()
         top = TwoOptMove()
+
+       
        
         while terminationCondition is False:
 
@@ -681,7 +686,17 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist):
                 else:
                     terminationCondition = True
                     print("FAILED")
+            elif operator == 4:
+                BestOnetoOneSwap(sm, route_list, cost_matrix, unserved)
+                if sm.moveCost < 0:
+                        ApplyOnetoOne(sm, route_list)
+                        print("                                                             MADE A TWO ONETOONE SWAP")
 
+                        onetoone = onetoone +1
+                else:
+                    terminationCondition = True
+                    print("FAILED")
+                    print(sm.moveCost)
             
 
 
@@ -861,6 +876,59 @@ def PairInsertion(pairlist, route_list, cost_matrix):
            
     
            
+def BestOnetoOneSwap(sm: SwapMove, route_list, cost_matrix,unserved):
+    for RouteIndex in range(0, len(route_list)):
+            rt = route_list[RouteIndex]
+            print("CHECKING ROUTE: ", RouteIndex)
+            for firstNodeIndex in range (1, len(rt.route) - 1):
+                
+                
+                for UnservedNode in unserved:
+
+                    a1 = rt.route[firstNodeIndex - 1]
+                    b1 = rt.route[firstNodeIndex]
+                    c1 = rt.route[firstNodeIndex + 1]
+
+                    b2 = UnservedNode
+                    print("CHECKING NODE:", b1.id, "WITH: ", b2.id)
+                    
+
+                    if b1.profit > b2.profit:
+                        print("PROFIT ISSUE")
+                        continue
+                    if rt.capacity - b1.demand + b2.demand > 150:
+                        print("CAPACITY ISSUE")
+                        continue
+
+                    print("PROFIT AND CAPACITY IS OKAY")
+
+                    costRemoved = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
+                    costAdded = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][c1.id]
+                    moveCost = costAdded - costRemoved
+                    print("MOVE COST IS: ", moveCost)
+                
+                   
+
+                        
+                if moveCost < sm.moveCost:
+                    sm.positionOfFirstNode = firstNodeIndex
+                    sm.positionOfFirstRoute = RouteIndex    
+                    sm.customer = UnservedNode
+                    sm.moveCost = moveCost
+
+def ApplyOnetoOne(sm: SwapMove, route_list):
+    rt = route_list[sm.positionOfFirstRoute]
+    b1 = rt.route[sm.positionOfFirstNode]
+    b1.added = False
+    rt.route[sm.positionOfFirstNode] = sm.customer
+
+    rt.time += sm.moveCost
+    rt.capacity = rt.capacity - b1.demand + sm.customer.demand
+    sm.customer.added = True
+
+
+
+
 
 
 
@@ -873,7 +941,13 @@ def solveProblem():
     solve(cust_list, route_list, cost_matrix)
     #DrawSolution(route_list, cust_list)
     candidates = generatePairs(cust_list)
-    LocalSearch(0, route_list, cost_matrix, candidates)
+
+    unserved = []
+    for x in cust_list:
+        if (x.added == False):
+            unserved.append(x)
+
+    LocalSearch(0, route_list, cost_matrix, candidates, unserved)
 
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
@@ -882,7 +956,6 @@ def solveProblem():
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
         
 
-    
     solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
@@ -890,7 +963,7 @@ def solveProblem():
 
     
 
-    LocalSearch(3, route_list, cost_matrix, candidates)
+    LocalSearch(3, route_list, cost_matrix, candidates, unserved)
 
     for i in route_list:
         print("ROUTE ", i.id)
@@ -901,13 +974,22 @@ def solveProblem():
     for k in route_list:
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
 
-    LocalSearch(0, route_list, cost_matrix, candidates)
-    LocalSearch(1, route_list, cost_matrix, candidates)
+    LocalSearch(0, route_list, cost_matrix, candidates, unserved)
+    LocalSearch(1, route_list, cost_matrix, candidates, unserved)
 
     solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
+
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print() 
+    
+    for k in route_list:
+        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
 
                                                             
     
@@ -925,6 +1007,9 @@ def solveProblem():
     # print("Now the new testing:")
     # print()
     # PairInsertion(candidates, route_list, cost_matrix)
+    
+    
+
             
 
 

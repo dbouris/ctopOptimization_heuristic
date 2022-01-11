@@ -1,0 +1,51 @@
+solve(cust_list, route_list, cost_matrix)
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
+
+    
+
+    LocalSearch(3, route_list, cost_matrix, candidates, unserved)
+
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print() 
+    
+    for k in route_list:
+        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+
+    LocalSearch(0, route_list, cost_matrix, candidates, unserved)
+    LocalSearch(1, route_list, cost_matrix, candidates, unserved)
+
+    solve(cust_list, route_list, cost_matrix)
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
+
+    for i in route_list:
+        print("ROUTE ", i.id)
+        for k in i.route:
+            print(k.id, end = " ")
+        print() 
+    
+    for k in route_list:
+        print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+
+                                                            
+    
+    # for x in candidates:
+    #     cust = x.customers
+    #     print(cust[0].id, cust[1].id)
+    #     print("|||||||")
+    #     print(x.totalProfit)
+    #     print("|||||||")
+    #     print(x.totalDemand)
+    #     print("|||||||")
+    #     print(x.totalServiceTime)
+    #     print()
+
+    # print("Now the new testing:")
+    # print()
+    # PairInsertion(candidates, route_list, cost_matrix)
