@@ -387,7 +387,6 @@ def StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
         rm.moveCost = moveCost
 
 def FindBestRelocationMove(rm, route_list, cost_matrix):
-        print("HEREEEEEEE")
         for originRouteIndex in range(0, len(route_list)):
             rt1 = route_list[originRouteIndex]
             for targetRouteIndex in range (0, len(route_list)):
@@ -407,6 +406,7 @@ def FindBestRelocationMove(rm, route_list, cost_matrix):
                         F = rt2.route[targetNodeIndex]
                         G = rt2.route[targetNodeIndex + 1]
 
+                        #print("SEND ", B.id, "TO: ", F.id)
 
                         if originRouteIndex != targetRouteIndex:
                             if rt2.capacity + B.demand > 150:
@@ -435,7 +435,7 @@ def FindBestRelocationMove(rm, route_list, cost_matrix):
 def FindBestSwapMove(sm, route_list, cost_matrix):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
-            for secondRouteIndex in range (firstRouteIndex, len(route_list)):
+            for secondRouteIndex in range (3,4):
                 #print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
                 rt2 = route_list[secondRouteIndex]
                 for firstNodeIndex in range (1, len(rt1.route) - 1):
@@ -642,7 +642,6 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
 
             if operator == 0:
                 FindBestRelocationMove(rm, route_list, cost_matrix)
-                print("OUT OF FIND BEST")
                 if rm.originRoutePosition is not None:
                     if rm.moveCost < 0:
                         ApplyRelocationMove(rm, route_list)
@@ -985,26 +984,15 @@ def solveProblem():
         servedpairs.append(generateServedPairs(r.route))   
 
     
-    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs)
-    
-    
-    
-    solve(cust_list, route_list, cost_matrix)
-    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
-    LocalSearch(1, route_list, cost_matrix, candidates,candidates2,servedpairs)
-    solve(cust_list, route_list, cost_matrix)
     LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs)
-
     solve(cust_list, route_list, cost_matrix)
+    
+
+   
 
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
-
-
-
-
-
 
 
     f= open("sol.txt","w+")
@@ -1021,11 +1009,16 @@ def solveProblem():
         f.write("\n")
         print("")
         
-    
-    
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs)
+   
     for k in route_list:
         print("ROUTE " , k.id ,"LEN: " , len(k.route), "TIME: ", k.time, "CAPACITY: ", k.capacity, "PROFIT: ", prof[k.id])
+    
+     
+    #TwoPairExchange(route_list, cost_matrix, candidates2, servedpairs)
 
+        
+   
     # for x in candidates:
     #     cust = x.customers
     #     print(cust[0].id, cust[1].id)
@@ -1033,7 +1026,7 @@ def solveProblem():
     #     print(x.totalProfit)
     #     print("|||||||")
     #     print(x.totalDemand)
-    #     print("|||||||");
+    #     print("|||||||")
     #     print(x.totalServiceTime)
     #     print()
 
