@@ -967,6 +967,52 @@ def TwoPairExchange(route_list, cost_matrix, pairlist, pairserved):
     return best
 
 
+def AllServedPairsExhange(route_list, cost_matrix, pairlist, pairserved): 
+    best = PairInsertionMove()
+    for pair in pairlist:       
+        if pair.customers[0].added == False and pair.customers[1].added == False:
+            for i in range(0,len(route_list)-1):                                
+                for pserved in pairserved[i]:
+                    if pserved.customers[0].added == True and pserved.customers[1].added == True:
+                         if pair.totalProfit >  pserved.totalProfit: 
+                             
+                             if route_list[i].capacity - pserved.totalDemand + pair.totalDemand > 150:
+                                 #print("CAPACITY ISSUE")
+                                 continue
+                             
+                             if route_list[i].time - pserved.totalServiceTime + pair.totalServiceTime > 200 :
+                                 #print("CAPACITY ISSUE")
+                                 continue
+                            
+                             candidateroute = route_list[i].route[1:len(route_list[i].route)-1]                             
+                             candidateroute.remove(pserved.customers[0])
+                             candidateroute.remove(pserved.customers[1])                             
+                             for k in pair.customers:
+                                 candidateroute.append(k)
+                             newrt = getEmptyRoutes(1)[0]
+                             for c in candidateroute:
+                                 c.added = False
+                             for j in range(0,len(candidateroute)):
+                                 best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                                 ApplyInsertion(newrt, best_inser)
+                             pair.customers[0].added = False
+                             pair.customers[1].added = False
+                             profit =  pair.totalProfit - pserved.totalProfit
+                            
+                             if newrt.time > 200:
+                                 continue                             
+                             if profit > best.profit_added:                                 
+                                 best.profit_added = profit 
+                                 best.route = route_list[i].id
+                                 best.route_list = newrt.route
+                                 best.route_time = newrt.time
+                                 best.pair_added = pair
+                                 best.pservedremove = pserved
+                                 best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - (pserved.customers[0].demand + pserved.customers[1].demand)
+                                 
+    return best
+
+
 
 
 def TwoServedOneUnservedExchange(route_list, cost_matrix, c_list, pairserved): 
@@ -1029,6 +1075,14 @@ def solveProblem():
     candidates = generatePairs(cust_list)
     servedpairs=[]
     candidates2=[]
+    candidates2 = generatePairs(cust_list)
+    allservedpairs=[]
+    allservedpairs=generateServedPairs(cust_list)
+    
+    
+    for r in route_list:
+        servedpairs.append(generateServedPairs(r.route))   
+
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
 
     prof = calclulateProfitRoute(route_list)
@@ -1044,17 +1098,13 @@ def solveProblem():
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
 
-    candidates2 = generatePairs(cust_list)  
-    
-    for r in route_list:
-        servedpairs.append(generateServedPairs(r.route))   
-
+   
     
     
     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
     solve(cust_list, route_list, cost_matrix)
-    LocalSearch(5, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     solve(cust_list, route_list, cost_matrix)
     #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
