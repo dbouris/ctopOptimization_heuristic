@@ -1199,12 +1199,12 @@ def solveProblem():
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
 
-    VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
-    solve(cust_list, route_list, cost_matrix)
-    VND(route_list, cost_matrix)
+    #VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
+    #solve(cust_list, route_list, cost_matrix)
+    #VND(route_list, cost_matrix)
 
-    #LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #solve(cust_list, route_list, cost_matrix)z
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
 
     
 
