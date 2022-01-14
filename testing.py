@@ -668,21 +668,21 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
         top = TwoOptMove()
        
         while terminationCondition is False:
-
             InitializeOperators(rm, sm, top)
-            
 
             if operator == 0:
+                print("HERE FOR RELOCATIONS")
                 FindBestRelocationMove(rm, route_list, cost_matrix)
-                if rm.originRoutePosition is not None:
-                    if rm.moveCost < 0:
-                        ApplyRelocationMove(rm, route_list)
-                        print("                                                             MADE A RELOCATION")
-                        reloc = reloc + 1
-                    else:
-                        terminationCondition = True
-                        print(rm.moveCost)
-                        print("FAILED")
+                print("OUT OF RELOCATIONS")
+                print(rm.moveCost)
+                if rm.moveCost < 0:
+                    ApplyRelocationMove(rm, route_list)
+                    print("                                                             MADE A RELOCATION")
+                    reloc = reloc + 1
+                else:
+                    terminationCondition = True
+                    print(rm.moveCost)
+                    print("FAILED")
             elif operator == 1:
                 FindBestSwapMove(sm ,route_list, cost_matrix)
                 if sm.positionOfFirstRoute is not None:
@@ -748,7 +748,7 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
             bestSolution = copy.deepcopy(route_list)
             prof = calclulateProfitRoute(bestSolution)
             total_prof = calclulatetotalProfit(prof)
-            print(total_prof)
+            #print(total_prof)
             
 
             localSearchIterator = localSearchIterator + 1
@@ -1196,15 +1196,20 @@ def solveProblem():
     allservedpairs=generateServedPairs(cust_list)
     
     
+
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
 
     #VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
     #solve(cust_list, route_list, cost_matrix)
     #VND(route_list, cost_matrix)
-
+    
     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     solve(cust_list, route_list, cost_matrix)
+    VND(route_list, cost_matrix)
+    #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    LocalSearch(3, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    
 
     
 
@@ -1213,7 +1218,7 @@ def solveProblem():
     print(total_prof)
 
    
-    f= open("sol.txt","w+")
+    f= open("sol.txt","w+")                                                                 
     print("Total Profit")
     f.write("Total Profit\n")
     print("%d" %total_prof)
