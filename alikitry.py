@@ -590,6 +590,12 @@ def FindBestTwoOptMove(top, route_list, cost_matrix, iterator, bestSolution):
                             costAdded = cost_matrix[A.id][K.id] + cost_matrix[B.id][L.id]
                             costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
                             moveCost = costAdded - costRemoved
+                            # check time violations
+                            if rt1.time + moveCost > 200:
+                                continue
+                            
+
+
                         else:
                             if nodeInd1 == 0 and nodeInd2 == 0:
                                 continue
