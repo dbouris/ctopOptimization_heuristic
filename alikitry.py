@@ -460,12 +460,12 @@ def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bes
 def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolution):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
-            for secondRouteIndex in range (3,4):
+            for secondRouteIndex in range (firstRouteIndex,len(route_list)):
                 #print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
                 rt2 = route_list[secondRouteIndex]
                 for firstNodeIndex in range (1, len(rt1.route) - 1):
                     startOfSecondNodeIndex = 1
-                    if firstRouteIndex == secondRouteIndex:
+                    if rt1 == rt2:
                         startOfSecondNodeIndex = firstNodeIndex + 1
                     for secondNodeIndex in range (startOfSecondNodeIndex, len(rt2.route) - 1):
 
@@ -483,7 +483,7 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                         costChangeFirstRoute = None
                         costChangeSecondRoute = None
 
-                        if firstRouteIndex == secondRouteIndex:
+                        if rt1 == rt2:
                             if firstNodeIndex == secondNodeIndex - 1:
                                 costRemoved = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][b2.id] + cost_matrix[b2.id][c2.id]
                                 costAdded = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][b1.id] + cost_matrix[b1.id][c2.id]
