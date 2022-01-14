@@ -532,6 +532,7 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                             print(moveCost)
 
                         if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
+                            print("apagoreytike")
                             continue
 
                         if moveCost < sm.moveCost:
@@ -1296,6 +1297,7 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
             FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
             if rm.originRoutePosition is not None:
                 ApplyRelocationMove(rm, route_list, localSearchIterator)
+
                 print("RELOCATION MOVE: ")
                 getTransferCost(route_list, cost_matrix)
                 
