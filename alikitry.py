@@ -407,7 +407,7 @@ def StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
         rm.timeChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
 
-def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix):
+def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bestSolution):
         for originRouteIndex in range(0, len(route_list)):
             rt1 = route_list[originRouteIndex]
             for targetRouteIndex in range (0, len(route_list)):
@@ -448,7 +448,7 @@ def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix):
                         moveCost = costAdded - costRemoved
                         #print(moveCost)
                         
-                        if (MoveIsTabu(B, localSearchIterator, moveCost)):
+                        if (MoveIsTabu(B, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution)):
                             continue
                         
                         if (moveCost < rm.moveCost):
@@ -456,7 +456,7 @@ def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix):
         
 
 
-def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator):
+def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolution):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
             for secondRouteIndex in range (3,4):
@@ -523,7 +523,7 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator):
                             moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                             print(moveCost)
 
-                        if MoveIsTabu(b1, localSearchIterator, moveCost) or MoveIsTabu(b2, localSearchIterator, moveCost):
+                        if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
                             continue
 
                         if moveCost < sm.moveCost:
@@ -562,7 +562,7 @@ def StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
     top.moveCost = moveCost
 
 
-def FindBestTwoOptMove(top, route_list, cost_matrix, iterator):
+def FindBestTwoOptMove(top, route_list, cost_matrix, iterator, bestSolution):
         for rtInd1 in range(0, len(route_list)):
             rt1 = route_list[rtInd1]
             for rtInd2 in range(rtInd1, len(route_list)):
@@ -603,8 +603,8 @@ def FindBestTwoOptMove(top, route_list, cost_matrix, iterator):
                             moveCost = costAdded - costRemoved
                             
                             #check time constraints
-                            relocatedSegmentOfRt1 = rt1.route[top.positionOfFirstNode + 1 :]
-                            relocatedSegmentOfRt2 = rt2.route[top.positionOfSecondNode + 1 :]
+                            relocatedSegmentOfRt1 = rt1.route[nodeInd1 + 1 :]
+                            relocatedSegmentOfRt2 = rt2.route[nodeInd2 + 1 :]
 
                             TimeReloc1 = getTimeInRoute(relocatedSegmentOfRt1, cost_matrix)
                             remaining1 = rt1.time - TimeReloc1
@@ -618,7 +618,7 @@ def FindBestTwoOptMove(top, route_list, cost_matrix, iterator):
                                 continue
 
                         #print(moveCost)
-                        if MoveIsTabu(A, iterator, moveCost) or MoveIsTabu(K, iterator, moveCost):
+                        if MoveIsTabu(A, iterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(K, iterator, moveCost,route_list, cost_matrix, bestSolution):
                             continue   
 
                         if moveCost < top.moveCost and abs(moveCost) > 0.0001:
@@ -1260,7 +1260,7 @@ def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list)
             total_prof = calclulatetotalProfit(prof)
             print(total_prof)
 
-def TabuSearch(operator, route_list, cost_matrix):
+def TabuSearch(operator, route_list, cost_matrix, cust_list):
     solution_cost_trajectory = []
     random.seed(1)
     bestSolution = copy.deepcopy(route_list)
@@ -1279,16 +1279,17 @@ def TabuSearch(operator, route_list, cost_matrix):
         
         # Relocations
         if operator == 0:
-            FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix)
+            FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
             if rm.originRoutePosition is not None:
                 ApplyRelocationMove(rm, route_list, localSearchIterator)
+                
         # Swaps
         elif operator == 1:
-            FindBestSwapMove(sm,route_list, cost_matrix, localSearchIterator)
+            FindBestSwapMove(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
             if sm.positionOfFirstRoute is not None:
                 ApplySwapMove(sm, route_list, localSearchIterator)
         elif operator == 2:
-            FindBestTwoOptMove(top,route_list, cost_matrix, localSearchIterator)
+            FindBestTwoOptMove(top,route_list, cost_matrix, localSearchIterator, bestSolution)
             if top.positionOfFirstRoute is not None:
                 ApplyTwoOptMove(top,route_list, cost_matrix, localSearchIterator)
 
@@ -1305,7 +1306,20 @@ def TabuSearch(operator, route_list, cost_matrix):
 
         localSearchIterator = localSearchIterator + 1
 
-        if localSearchIterator > 10000:
+        candidates = generatePairs(cust_list)
+        servedpairs=[]
+        candidates2=[]
+        candidates2 = generatePairs(cust_list)
+        allservedpairs=[]
+        allservedpairs=generateServedPairs(cust_list)
+        
+        
+        for r in route_list:
+            servedpairs.append(generateServedPairs(r.route))
+
+        VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
+
+        if localSearchIterator > 125:
             terminationCondition = True
 
     # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
@@ -1356,9 +1370,9 @@ def solveProblem():
     #VND(route_list, cost_matrix)
 
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # solve(cust_list, route_list, cost_matrix)
-    TabuSearch(0, route_list, cost_matrix)
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
+    TabuSearch(0, route_list, cost_matrix, cust_list)
     
 
     prof = calclulateProfitRoute(route_list)
