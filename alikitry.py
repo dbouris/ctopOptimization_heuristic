@@ -488,6 +488,8 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                                 costRemoved = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][b2.id] + cost_matrix[b2.id][c2.id]
                                 costAdded = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][b1.id] + cost_matrix[b1.id][c2.id]
                                 moveCost = costAdded - costRemoved
+
+
                             else:
 
                                 costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
@@ -495,6 +497,11 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                                 costRemoved2 = cost_matrix[a2.id][b2.id] + cost_matrix[b2.id][c2.id]
                                 costAdded2 = cost_matrix[a2.id][b1.id] + cost_matrix[b1.id][c2.id]
                                 moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                            
+                            #check for time violation
+                            if rt1.time + moveCost > 200:
+                                continue
+                        
                         else:
                             if rt1.capacity - b1.demand + b2.demand > 150:
                                 #print("DOES NOT FIT IN R1")
@@ -593,7 +600,7 @@ def FindBestTwoOptMove(top, route_list, cost_matrix, iterator, bestSolution):
                             # check time violations
                             if rt1.time + moveCost > 200:
                                 continue
-                            
+
 
 
                         else:
