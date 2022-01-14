@@ -295,7 +295,6 @@ def getTransferCost(route_list, cost_matrix):
             if (j != 0):
                 transfer_cost = transfer_cost + i.route[j].serv_time
         transfer = transfer + transfer_cost
-        print("ROUTE:", i.id, transfer_cost)
     return transfer
 
 def getServCost(route_list):
@@ -532,7 +531,6 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                             print(moveCost)
 
                         if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
-                            print("apagoreytike")
                             continue
 
                         if moveCost < sm.moveCost:
@@ -1297,23 +1295,19 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
             FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
             if rm.originRoutePosition is not None:
                 ApplyRelocationMove(rm, route_list, localSearchIterator)
-
-                print("RELOCATION MOVE: ")
-                getTransferCost(route_list, cost_matrix)
+                
                 
         # Swaps
         elif operator == 1:
             FindBestSwapMove(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
             if sm.positionOfFirstRoute is not None:
                 ApplySwapMove(sm, route_list, localSearchIterator)
-                print("SWAP MOVE: ")
-                getTransferCost(route_list, cost_matrix)
+                
         elif operator == 2:
             FindBestTwoOptMove(top,route_list, cost_matrix, localSearchIterator, bestSolution)
             if top.positionOfFirstRoute is not None:
                 ApplyTwoOptMove(top,route_list, cost_matrix, localSearchIterator)
-                print("TWOPT MOVE: ")
-                getTransferCost(route_list, cost_matrix)
+                
 
         # self.ReportSolution(self.sol)
         
@@ -1341,7 +1335,7 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
 
         VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
 
-        if localSearchIterator > 125:
+        if localSearchIterator > 5:
             terminationCondition = True
 
     # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
@@ -1396,7 +1390,8 @@ def solveProblem():
     solve(cust_list, route_list, cost_matrix)
     TabuSearch(0, route_list, cost_matrix, cust_list)
     
-
+    DrawSolution(route_list, cust_list)
+    
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
@@ -1430,7 +1425,7 @@ def solveProblem():
     # print("Now the new testing:")
     # print()
     # PairInsertion(candidates, route_list, cost_matrix)
-            
+       
 
 
 solveProblem()
