@@ -1258,16 +1258,12 @@ def randomRemoval(rt,cost_matrix,seed):
     best = PairInsertionMove()
     remnodes=[]
     random.seed(seed)    
-    remnodes=random.sample(range(1, 20), len(rt.route))
-          
-    for node in remnodes:        
-        if (node<(len(rt.route)-1)):
-            remcustomer=rt.route[node]
-            #rt.capacity=rt.capacity-remcustomer.demand
-            #rt.time=rt.time-remcustomer.serv_time           
-            #currentnode=rt.route.pop(node)
-            
-            rt.route.remove(remcustomer)
+    remnodes=random.sample(range(1,len(rt.route)-1), 4)
+    remnodes.sort(reverse=True)    
+    for node in remnodes:
+        remcustomer=rt.route[node]            
+        remcustomer.added=False
+        rt.route.remove(remcustomer)
         if len(rt.route)==2:
             break
     
@@ -1278,8 +1274,9 @@ def randomRemoval(rt,cost_matrix,seed):
         #print(cand.id)
     for j in range(0,len(candidateroute)):
         best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
-        ApplyInsertion(newrt, best_inser)
-    print(newrt.capacity)
+        ApplyInsertion(newrt, best_inser)    
+  
+    
     return newrt
 
     #for c in newrt.route:
@@ -1323,11 +1320,12 @@ def solveProblem():
     #         b_profit=total_prof
     # print(b_profit)
     route_list[3]=randomRemoval(route_list[3],cost_matrix,130)
-    route_list[4]=randomRemoval(route_list[4],cost_matrix,130)
-    print(len(route_list[3].route))
+    
+   
+   
     candidates = generatePairs(cust_list)
     servedpairs=[]
-    candidates2=[]
+    candidates2=[]   
     candidates2 = generatePairs(cust_list)
     allservedpairs=[]
     allservedpairs=generateServedPairs(cust_list)
@@ -1335,20 +1333,22 @@ def solveProblem():
     
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
-        
+   
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
+   
+    candidates = generatePairs(cust_list)
+    servedpairs=[]
+    candidates2=[]   
+    candidates2 = generatePairs(cust_list)
+    allservedpairs=[]
+    allservedpairs=generateServedPairs(cust_list)
     
     
-    # LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    for r in route_list:
+        servedpairs.append(generateServedPairs(r.route))
+    LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
-    # solve(cust_list, route_list, cost_matrix)
-    #VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
-    #solve(cust_list, route_list, cost_matrix)
-    #VND(route_list, cost_matrix)
-
-    #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    
-    #LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #solve(cust_list, route_list, cost_matrix)
 
     prof = calclulateProfitRoute(route_list)
     for p in prof:
