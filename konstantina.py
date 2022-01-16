@@ -1,4 +1,4 @@
-
+import time
 import csv
 import math
 from typing import NewType
@@ -44,6 +44,7 @@ class PairInsertionMove(object):
         self.pair_added = None
         self.pservedremove=None
         self.nodetoadd = None
+        self.capacity = None
 
     def Initialize(self):
         self.route = None
@@ -867,17 +868,7 @@ def ApplyInsertion(newrt, best):
     best.customer.added = True
     
     
-def ApplyRandInsertion(newrt, best):
-    #updates time and capacity of the route
-    newrt.capacity = best.customer.demand
-    newrt.time +=  best.time 
 
-    #adds the node to its new position
-    r = newrt.route
-    r.insert(best.position+1,best.customer)
-    newrt.route = r
-
-    best.customer.added = True
     
 
 def ApplyPairMove(best : PairInsertionMove,route_list):
@@ -913,6 +904,13 @@ def ApplyOneNodeMove(best : PairInsertionMove,route_list):
     route_list[best.route].capacity = route_list[best.route].capacity + best.capacity_change
     best.nodetoadd.added = True   
     best.nodetoremove.added = False
+
+def ApplyDestroy(best : PairInsertionMove,route_list):
+    route_list[best.route].route = best.route_list
+    route_list[best.route].time = best.route_time
+    route_list[best.route].capacity = best.capacity 
+    #best.nodetoadd.added = True   
+    #best.nodetoremove.added = False
 
 
 
@@ -1254,7 +1252,7 @@ def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list)
 
 
 
-def randomRemoval(rt,cost_matrix,seed):
+def randomRemoval(rt,cost_matrix,seed,route_list):
     best = PairInsertionMove()
     remnodes=[]
     random.seed(seed)    
@@ -1275,17 +1273,22 @@ def randomRemoval(rt,cost_matrix,seed):
     for j in range(0,len(candidateroute)):
         best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
         ApplyInsertion(newrt, best_inser)    
-  
+    best.route = rt.id
+    best.route_list = newrt.route
+    best.route_time = newrt.time
+    #best.nodetoadd = c
+    #best.pservedremove = pserved
     
-    return newrt
-
+    best.capacity = newrt.capacity
+    ApplyDestroy(best, route_list)
+    
     #for c in newrt.route:
         #print(c.id)
      
 
 
 def solveProblem():
-    
+    start = time.time()
     route_list = getEmptyRoutes(6)
     cust_list = getCustomers("instance.csv")
 
@@ -1297,57 +1300,73 @@ def solveProblem():
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
-    b_profit=total_prof
+    b_profit=0
+    candidates = generatePairs(cust_list)
+    servedpairs=[]
+    candidates2=[]   
+    candidates2 = generatePairs(cust_list)
+    allservedpairs=[]
+    allservedpairs=generateServedPairs(cust_list)
     
-    # for j in range(0,50):
-    #     route_list[3]=randomRemoval(route_list[3],cost_matrix,j)
-    #     route_list[4]=randomRemoval(route_list[4],cost_matrix,j)
-    #     solve(cust_list, route_list, cost_matrix)
-    #     prof = calclulateProfitRoute(route_list)
-    #     total_prof = calclulatetotalProfit(prof)
-    #     candidates = generatePairs(cust_list)
-    #     servedpairs=[]
-    #     candidates2=[]
-    #     candidates2 = generatePairs(cust_list)
-    #     allservedpairs=[]
-    #     allservedpairs=generateServedPairs(cust_list)
-    #     for r in route_list:
-    #         servedpairs.append(generateServedPairs(r.route))
-    #     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    
+    for r in route_list:
+        servedpairs.append(generateServedPairs(r.route))
+    
+    for j in range(130,250):
+        randomRemoval(route_list[3],cost_matrix,j,route_list)
+        #randomRemoval(route_list[4],cost_matrix,j,route_list)
+        LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        solve(cust_list, route_list, cost_matrix)
+        prof = calclulateProfitRoute(route_list)
+        total_prof = calclulatetotalProfit(prof)
+        candidates = generatePairs(cust_list)
+        servedpairs=[]
+        candidates2=[]   
+        candidates2 = generatePairs(cust_list)
+        allservedpairs=[]
+        allservedpairs=generateServedPairs(cust_list)
+    
+    
+        for r in route_list:
+            servedpairs.append(generateServedPairs(r.route))
+        LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         
-    #     if total_prof>b_profit:
-    #         b_profit=total_prof
-    # print(b_profit)
-    route_list[3]=randomRemoval(route_list[3],cost_matrix,130)
+        if total_prof>1070:
+            b_profit=total_prof
+            break
+    print(b_profit)
+    # randomRemoval(route_list[3],cost_matrix,130,route_list)
+    # randomRemoval(route_list[4],cost_matrix,150,route_list)
     
    
+    # candidates = generatePairs(cust_list)
+    # servedpairs=[]
+    # candidates2=[]   
+    # candidates2 = generatePairs(cust_list)
+    # allservedpairs=[]
+    # allservedpairs=generateServedPairs(cust_list)
+    
+    
+    # for r in route_list:
+    #     servedpairs.append(generateServedPairs(r.route))
    
-    candidates = generatePairs(cust_list)
-    servedpairs=[]
-    candidates2=[]   
-    candidates2 = generatePairs(cust_list)
-    allservedpairs=[]
-    allservedpairs=generateServedPairs(cust_list)
-    
-    
-    for r in route_list:
-        servedpairs.append(generateServedPairs(r.route))
+    # LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    # solve(cust_list, route_list, cost_matrix)
+    # print("cap")
+    # print(route_list[3].capacity)
+    # print(route_list[3].time)
    
-    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    solve(cust_list, route_list, cost_matrix)
-   
-    candidates = generatePairs(cust_list)
-    servedpairs=[]
-    candidates2=[]   
-    candidates2 = generatePairs(cust_list)
-    allservedpairs=[]
-    allservedpairs=generateServedPairs(cust_list)
+    # candidates = generatePairs(cust_list)
+    # servedpairs=[]
+    # candidates2=[]   
+    # candidates2 = generatePairs(cust_list)
+    # allservedpairs=[]
+    # allservedpairs=generateServedPairs(cust_list)
     
     
-    for r in route_list:
-        servedpairs.append(generateServedPairs(r.route))
-    LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    # for r in route_list:
+    #     servedpairs.append(generateServedPairs(r.route))
+    # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
 
     prof = calclulateProfitRoute(route_list)
@@ -1365,11 +1384,15 @@ def solveProblem():
     for i in range(0,len(route_list)):
         f.write("Route %d\n" %(i+1))
         print("Route %d" %(i+1))
+        print(route_list[i].capacity)
+        print(route_list[i].time)
         for c in route_list[i].route:            
             f.write("%d " %c.id)
-            print("%d" %c.id,end =" ")
-        f.write("\n")
+            print("%d" %c.id,end =" ")            
+        #f.write("\n")
         print("")
+    end = time.time()
+    print(end - start)
     
     # for x in candidates:
     #     cust = x.customers
