@@ -1312,13 +1312,13 @@ def solveProblem():
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
     
-    for j in range(130,250):
-        randomRemoval(route_list[3],cost_matrix,j,route_list)
-        #randomRemoval(route_list[4],cost_matrix,j,route_list)
+    for j in range(0,7):
+        randomRemoval(route_list[3],cost_matrix,20,route_list)
+        randomRemoval(route_list[4],cost_matrix,40,route_list)
+        #randomRemoval(route_list[5],cost_matrix,j,route_list)
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
-        prof = calclulateProfitRoute(route_list)
-        total_prof = calclulatetotalProfit(prof)
+           
         candidates = generatePairs(cust_list)
         servedpairs=[]
         candidates2=[]   
@@ -1330,7 +1330,10 @@ def solveProblem():
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
         LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-        
+        LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        solve(cust_list, route_list, cost_matrix)
+        prof = calclulateProfitRoute(route_list)
+        total_prof = calclulatetotalProfit(prof)
         if total_prof>1070:
             b_profit=total_prof
             break
@@ -1367,7 +1370,8 @@ def solveProblem():
     # for r in route_list:
     #     servedpairs.append(generateServedPairs(r.route))
     # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
 
     prof = calclulateProfitRoute(route_list)
     for p in prof:
