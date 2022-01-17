@@ -1698,7 +1698,6 @@ def solveProblem():
     #solve(cust_list, route_list, cost_matrix)
     #VND(route_list, cost_matrix)
 
-
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     # solve(cust_list, route_list, cost_matrix)
@@ -1708,10 +1707,6 @@ def solveProblem():
     # solve(cust_list, route_list, cost_matrix)
     
     # DrawSolution(route_list, cust_list)
-    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    solve(cust_list, route_list, cost_matrix)
-    TabuSearch(0, route_list, cost_matrix, cust_list)
-
     for j in range(0,5):
         randomRemoval(route_list[3],cost_matrix,20,route_list)
         randomRemoval(route_list[4],cost_matrix,40,route_list)
