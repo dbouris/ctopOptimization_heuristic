@@ -25,7 +25,7 @@ class SolDrawer:
 
     @staticmethod
     def drawRoutes(sol):
-        cmap = SolDrawer.get_cmap(len(sol.routes))
+        cmap = SolDrawer.get_cmap(len(sol.routes) + 1)
         if sol is not None:
             for r in range(0, len(sol.routes)):
                 rt = sol.routes[r]
@@ -42,4 +42,3 @@ class SolDrawer:
         plt.xlabel('Iterations')
         plt.ylabel('Objective Function')
         plt.savefig(str("SearchTrajectory"))
-
