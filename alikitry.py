@@ -449,6 +449,7 @@ def FindBestRelocationMove(rm, localSearchIterator, route_list, cost_matrix, bes
                         #print(moveCost)
                         
                         if (MoveIsTabu(B, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution)):
+                            print("forbiden")
                             continue
                         
                         if (moveCost < rm.moveCost):
@@ -531,10 +532,10 @@ def FindBestSwapMove(sm, route_list, cost_matrix, localSearchIterator, bestSolut
                             print(moveCost)
 
                         if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
+                            print("forbiden")
                             continue
 
                         if moveCost < sm.moveCost:
-     
                             StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
 
@@ -632,6 +633,7 @@ def FindBestTwoOptMove(top, route_list, cost_matrix, iterator, bestSolution):
 
                         #print(moveCost)
                         if MoveIsTabu(A, iterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(K, iterator, moveCost,route_list, cost_matrix, bestSolution):
+                            print("forbiden")
                             continue   
 
                         if moveCost < top.moveCost and abs(moveCost) > 0.0001:

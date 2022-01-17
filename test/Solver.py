@@ -454,8 +454,10 @@ class Solver:
        self.sol.cost += sm.moveCost
 
        newCost = self.CalculateTotalCost(self.sol)
+       
        self.SetTabuIterator(b1, iterator)
        self.SetTabuIterator(b2, iterator)
+       
        # debuggingOnly
        if abs((newCost - oldCost) - sm.moveCost) > 0.0001:
            print('Cost Issue')
