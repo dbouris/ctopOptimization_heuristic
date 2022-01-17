@@ -341,12 +341,19 @@ def DrawSolution(route_list, cust_list):
     SolDrawer.drawRoutes(route_list)
     SolDrawer.drawPointsUsed(cust_list)
 
-def ApplySwapMoveTabu(sm, route_list, iterator):
+def ApplySwapMoveTabu(sm, route_list, iterator, tabuArcMatrix):
 
     rt1 = route_list[sm.positionOfFirstRoute]
     rt2 = route_list[sm.positionOfSecondRoute]
+
+    a1 = rt1.route[sm.positionOfFirstNode - 1]
+    a2 = rt2.route[sm.positionOfSecondNode - 1]
     b1 = rt1.route[sm.positionOfFirstNode]
     b2 = rt2.route[sm.positionOfSecondNode]
+    c1 = rt1.route[sm.positionOfFirstNode + 1]
+    c2 = rt2.route[sm.positionOfSecondNode + 1]
+
+
     rt1.route[sm.positionOfFirstNode] = b2
     rt2.route[sm.positionOfSecondNode] = b1
 
@@ -358,8 +365,10 @@ def ApplySwapMoveTabu(sm, route_list, iterator):
         rt1.capacity = rt1.capacity - b1.demand + b2.demand
         rt2.capacity = rt2.capacity + b1.demand - b2.demand
         
-    SetTabuIterator(b1, iterator)
-    SetTabuIterator(b2, iterator)
+    SetTabuIteratorArc(a1, b1, iterator, tabuArcMatrix)
+    SetTabuIteratorArc(b1, c1, iterator, tabuArcMatrix)
+    SetTabuIteratorArc(a2, b2, iterator, tabuArcMatrix)
+    SetTabuIteratorArc(b2, c2, iterator, tabuArcMatrix)
 
 def ApplySwapMove(sm, route_list):
 
@@ -381,13 +390,18 @@ def ApplySwapMove(sm, route_list):
 
 
 
-def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator):
+def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator, tabuArcMatrix):
 
 
         originRt = route_list[rm.originRoutePosition]
         targetRt = route_list[rm.targetRoutePosition]
 
+        A = originRt.route[rm.originNodePosition - 1]
         B = originRt.route[rm.originNodePosition]
+        C = originRt.route[rm.originNodePosition + 1]
+        F = targetRt.route[rm.targetNodePosition]
+        G = targetRt.route[rm.targetNodePosition + 1]
+
 
         if originRt == targetRt:
             del originRt.route[rm.originNodePosition]
@@ -405,7 +419,9 @@ def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator):
             originRt.capacity -= B.demand
             targetRt.capacity += B.demand
 
-        SetTabuIterator(B,localSearchIterator)
+        SetTabuIteratorArc(A, B, localSearchIterator, tabuArcMatrix)
+        SetTabuIteratorArc(B, C, localSearchIterator, tabuArcMatrix)
+        SetTabuIteratorArc(F, G, localSearchIterator, tabuArcMatrix)
 
 def ApplyRelocationMove(rm, route_list):
 
@@ -451,7 +467,7 @@ def StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
         rm.timeChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
 
-def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution):
+def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution, tabuArcMatrix):
         for originRouteIndex in range(0, len(route_list)):
             rt1 = route_list[originRouteIndex]
             for targetRouteIndex in range (0, len(route_list)):
@@ -492,7 +508,8 @@ def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix,
                         moveCost = costAdded - costRemoved
                         #print(moveCost)
                         
-                        if (MoveIsTabu(B, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution)):
+                        if (MoveIsTabuArc(A, C, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix)) or (MoveIsTabuArc(F, B, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix)) \
+                                or (MoveIsTabuArc(B, G, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix)):
                             print("forbiden")
                             continue
                         
@@ -547,7 +564,7 @@ def FindBestRelocationMove(rm, route_list, cost_matrix):
         
 
 
-def FindBestSwapMoveTabu(sm, route_list, cost_matrix, localSearchIterator, bestSolution):
+def FindBestSwapMoveTabu(sm, route_list, cost_matrix, localSearchIterator, bestSolution, tabuArcMatrix):
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
             for secondRouteIndex in range (firstRouteIndex,len(route_list)):
@@ -621,7 +638,8 @@ def FindBestSwapMoveTabu(sm, route_list, cost_matrix, localSearchIterator, bestS
                             moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                             print(moveCost)
 
-                        if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
+                        if MoveIsTabuArc(a1, b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix) or MoveIsTabuArc(b2, c1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix)\
+                                or MoveIsTabuArc(a2, b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix) or MoveIsTabuArc(b1, c2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix):
                             print("forbiden")
                             continue
 
@@ -736,7 +754,7 @@ def StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
     top.moveCost = moveCost
 
 
-def FindBestTwoOptMoveTabu(top, route_list, cost_matrix, iterator, bestSolution):
+def FindBestTwoOptMoveTabu(top, route_list, cost_matrix, iterator, bestSolution, tabuArcMatrix):
         for rtInd1 in range(0, len(route_list)):
             rt1 = route_list[rtInd1]
             for rtInd2 in range(rtInd1, len(route_list)):
@@ -798,7 +816,7 @@ def FindBestTwoOptMoveTabu(top, route_list, cost_matrix, iterator, bestSolution)
                                 continue
 
                         #print(moveCost)
-                        if MoveIsTabu(A, iterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(K, iterator, moveCost,route_list, cost_matrix, bestSolution):
+                        if MoveIsTabuArc(A, K, iterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix) or MoveIsTabuArc(B, L, iterator, moveCost,route_list, cost_matrix, bestSolution, tabuArcMatrix):
                             print("forbiden")
                             continue   
 
@@ -872,7 +890,7 @@ def FindBestTwoOptMove(top, route_list, cost_matrix):
                             StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
 
-def ApplyTwoOptMoveTabu(top, route_list, cost_matrix, iterator):
+def ApplyTwoOptMoveTabu(top, route_list, cost_matrix, iterator, tabuArcMatrix):
     rt1 = route_list[top.positionOfFirstRoute]
     rt2 = route_list[top.positionOfSecondRoute]
 
@@ -886,8 +904,9 @@ def ApplyTwoOptMoveTabu(top, route_list, cost_matrix, iterator):
         #reversedSegmentList = list(reversed(rt1.route[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1]))
         #rt1.route[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1] = reversedSegmentList
 
-        SetTabuIterator(rt1.route[top.positionOfFirstNode], iterator)
-        SetTabuIterator(rt1.route[top.positionOfSecondNode], iterator)
+        SetTabuIteratorArc(rt1.route[top.positionOfFirstNode], rt1.route[top.positionOfFirstNode + 1], iterator, tabuArcMatrix)
+        SetTabuIteratorArc(rt1.route[top.positionOfSecondNode], rt1.route[top.positionOfSecondNode + 1], iterator, tabuArcMatrix)
+            
 
         rt1.time += top.moveCost
 
@@ -904,12 +923,14 @@ def ApplyTwoOptMoveTabu(top, route_list, cost_matrix, iterator):
         rt1.route.extend(relocatedSegmentOfRt2)
         rt2.route.extend(relocatedSegmentOfRt1)
 
-        SetTabuIterator(rt1.route[top.positionOfFirstNode], iterator)
-        SetTabuIterator(rt2.route[top.positionOfSecondNode], iterator)
+        SetTabuIteratorArc(rt1.route[top.positionOfFirstNode], rt1.route[top.positionOfFirstNode + 1], iterator, tabuArcMatrix)
+        SetTabuIteratorArc(rt2.route[top.positionOfSecondNode], rt2.route[top.positionOfSecondNode + 1], iterator, tabuArcMatrix)
+
 
         #lathooooos
         UpdateRouteCostAndLoad(rt1, cost_matrix)
         UpdateRouteCostAndLoad(rt2, cost_matrix)
+
 
 def ApplyTwoOptMove(top, route_list, cost_matrix):
     rt1 = route_list[top.positionOfFirstRoute]
@@ -1541,7 +1562,9 @@ def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list)
             total_prof = calclulatetotalProfit(prof)
             print(total_prof)
 
-def TabuSearch(operator, route_list, cost_matrix, cust_list):
+
+
+def TabuSearch(operator, route_list, cost_matrix, cust_list, tabuArcMatrix):
     solution_cost_trajectory = []
     random.seed(1)
     bestSolution = copy.deepcopy(route_list)
@@ -1561,9 +1584,9 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
         # Relocations
         if operator == 0:
             print("CHECKING RELOCATIONS IN TABU")
-            FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
+            FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution,tabuArcMatrix)
             if rm.originRoutePosition is not None:
-                ApplyRelocationMoveTabu(rm, route_list, localSearchIterator)  
+                ApplyRelocationMoveTabu(rm, route_list, localSearchIterator, tabuArcMatrix)  
                 print("MADE A RELOCATION IN TABU")
                 print("NODE: ", rm.originNodePosition,"ROUTE: ", rm.originRoutePosition)
                 print("NODE: ", rm.targetNodePosition,"ROUTE: ", rm.targetRoutePosition)
@@ -1572,9 +1595,9 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
         # Swaps
         elif operator == 1:
             print("CHECKING SWAP MOVES IN TABU")
-            FindBestSwapMoveTabu(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
+            FindBestSwapMoveTabu(sm,route_list, cost_matrix, localSearchIterator, bestSolution, tabuArcMatrix)
             if sm.positionOfFirstRoute is not None:
-                ApplySwapMoveTabu(sm, route_list, localSearchIterator)
+                ApplySwapMoveTabu(sm, route_list, localSearchIterator, tabuArcMatrix)
                 print("MADE A SWAP IN TABU")
                 print("NODE: ", sm.positionOfFirstNode, "ROUTE: ", sm.positionOfFirstRoute)
                 print("NODE: ", sm.positionOfSecondNode, "ROUTE: ", sm.positionOfSecondRoute)
@@ -1583,9 +1606,9 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
                 
         elif operator == 2:
             print("CHECKING TWO OPTS IN TABU")
-            FindBestTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, bestSolution)
+            FindBestTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, bestSolution, tabuArcMatrix)
             if top.positionOfFirstRoute is not None:
-                ApplyTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator)
+                ApplyTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, tabuArcMatrix)
                 print("MADE A TWOOPT IN TABU")
             else:
                 print("NO TWOOPT MOVE FOUND")
@@ -1617,7 +1640,7 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
 
         VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
 
-        if localSearchIterator > 30:
+        if localSearchIterator > 80:
             terminationCondition = True
 
     # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
@@ -1637,9 +1660,24 @@ def SetTabuIterator(n, iterator):
     n.isTabuTillIterator = iterator + random.randint(15, 20)
 
 
+def MoveIsTabuArc(n, v, iterator, moveCost, route_list, cost_matrix, bestSolution, tabuArcMatrix):
+    if moveCost + getTransferCost(route_list, cost_matrix) < getTransferCost(bestSolution, cost_matrix) - 0.0001:
+        return False
+    if iterator < tabuArcMatrix[n.id][v.id]:
+        return True
+    return False
+
+def SetTabuIteratorArc(n, v, iterator, tabuArcMatrix):
+    tabuArcMatrix[n.id][v.id] = iterator + random.randint(10, 20)
+    #self.tabuArcMatrix[v.ID][n.ID] = iterator + self.tabuTenure
+    #n.isTabuTillIterator = iterator + self.tabuTenure
+    # n.isTabuTillIterator = iterator + self.minTabuTenure + random.randint(0, self.maxTabuTenure - self.minTabuTenure)
+
+
 def solveProblem():
     route_list = getEmptyRoutes(6)
     cust_list = getCustomers("instance.csv")
+    cust_list.append(Customer(0,0,0,0,0,0,True))
 
     cost_matrix = getCost_Matrix(cust_list)
 
@@ -1667,13 +1705,16 @@ def solveProblem():
     #solve(cust_list, route_list, cost_matrix)
     #VND(route_list, cost_matrix)
 
+    tabuArcMatrix = [[0.0 for x in range(len(cust_list)+1)] for y in range(len(cust_list)+1)]
+
+
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     solve(cust_list, route_list, cost_matrix)
-    TabuSearch(0, route_list, cost_matrix, cust_list)
+    TabuSearch(0, route_list, cost_matrix, cust_list, tabuArcMatrix)
 
-    #VND(route_list, cost_matrix)
-    #solve(cust_list, route_list, cost_matrix)
+    VND(route_list, cost_matrix)
+    solve(cust_list, route_list, cost_matrix)
     
     
     
