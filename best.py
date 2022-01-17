@@ -1746,9 +1746,20 @@ def solveProblem():
             b_profit=total_prof
             break
     print(b_profit)
-    TabuSearch(0, route_list, cost_matrix, cust_list)
-    #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #solve(cust_list, route_list, cost_matrix)
+    #TabuSearch(0, route_list, cost_matrix, cust_list)
+    candidates = generatePairs(cust_list)
+    servedpairs=[]
+    candidates2=[]   
+    candidates2 = generatePairs(cust_list)
+    allservedpairs=[]
+    allservedpairs=generateServedPairs(cust_list)
+    
+    
+    for r in route_list:
+        servedpairs.append(generateServedPairs(r.route))
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
