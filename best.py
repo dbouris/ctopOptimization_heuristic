@@ -20,7 +20,7 @@ class RelocationMove(object):
         self.targetNodePosition = None
         self.timeChangeOriginRt = None
         self.timeChangeTargetRt = None
-        self.moveCost = 10**9
+        self.moveCost = None
 
     def Initialize(self):
         self.originRoutePosition = None
@@ -65,7 +65,7 @@ class SwapMove(object):
         self.positionOfSecondNode = None
         self.timeChangeFirstRt = None
         self.timeChangeSecondRt = None
-        self.moveCost = 10**9
+        self.moveCost = None
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -81,7 +81,7 @@ class TwoOptMove(object):
         self.positionOfSecondRoute = None
         self.positionOfFirstNode = None
         self.positionOfSecondNode = None
-        self.moveCost = 10**9
+        self.moveCost = None
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -979,34 +979,37 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
 
             if operator == 0:
                 FindBestRelocationMove(rm, route_list, cost_matrix)
-                if rm.moveCost < 0:
-                    ApplyRelocationMove(rm, route_list)
-                    print("                                                             MADE A RELOCATION")
-                    reloc = reloc + 1
-                else:
-                    terminationCondition = True
-                    print(rm.moveCost)
-                    print("FAILED")
+                if rm.originRoutePosition is not None:
+                    if rm.moveCost < 0:
+                        ApplyRelocationMove(rm, route_list)
+                        print("                                                             MADE A RELOCATION")
+                        reloc = reloc + 1
+                    else:
+                        terminationCondition = True
+                        print(rm.moveCost)
+                        print("FAILED")
             elif operator == 1:
                 FindBestSwapMove(sm ,route_list, cost_matrix)
-                if sm.moveCost < 0:
-                    ApplySwapMove(sm, route_list)
-                    print("                                                             MADE A SWAP")
-                    swaps = swaps +1
-                else:
-                    terminationCondition = True
-                    print("FAILED")
-                    print(sm.moveCost)
+                if sm.positionOfFirstRoute is not None:
+                    if sm.moveCost < 0:
+                        ApplySwapMove(sm, route_list)
+                        print("                                                             MADE A SWAP")
+                        swaps = swaps +1
+                    else:
+                        terminationCondition = True
+                        print("FAILED")
+                        print(sm.moveCost)
             elif operator == 2:
                 FindBestTwoOptMove(top,route_list, cost_matrix)
-                if top.moveCost < 0:
-                    ApplyTwoOptMove(top, route_list, cost_matrix)
-                    print("                                                             MADE A TWO OPT")
-                    opt = opt + 1
-                else:
-                    terminationCondition = True
-                    print("FAILED")
-                    print(top.moveCost)
+                if top.positionOfFirstRoute is not None:
+                    if top.moveCost < 0:
+                        ApplyTwoOptMove(top, route_list, cost_matrix)
+                        print("                                                             MADE A TWO OPT")
+                        opt = opt + 1
+                    else:
+                        terminationCondition = True
+                        print("FAILED")
+                        print(top.moveCost)
             elif operator == 3:
                 best: PairInsertionMove = PairInsertion(pairlist, route_list, cost_matrix)
                 if best.profit_added > 0:
@@ -1696,22 +1699,27 @@ def solveProblem():
     #VND(route_list, cost_matrix)
 
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # solve(cust_list, route_list, cost_matrix)
-    # TabuSearch(0, route_list, cost_matrix, cust_list)
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
+    TabuSearch(0, route_list, cost_matrix, cust_list)
 
     # VND(route_list, cost_matrix)
     # solve(cust_list, route_list, cost_matrix)
     
     # DrawSolution(route_list, cust_list)
-    for j in range(0,5):
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
+    for p in prof:
+        print(p)
+    for j in range(0,3):
         randomRemoval(route_list[3],cost_matrix,20,route_list)
         randomRemoval(route_list[4],cost_matrix,40,route_list)
         #randomRemoval(route_list[5],cost_matrix,j,route_list)
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         
-           
         candidates = generatePairs(cust_list)
         servedpairs=[]
         candidates2=[]   
@@ -1723,6 +1731,7 @@ def solveProblem():
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
         LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         TabuSearch(0, route_list, cost_matrix, cust_list)
@@ -1736,10 +1745,10 @@ def solveProblem():
     
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
-       
+        
         prof = calclulateProfitRoute(route_list)
         total_prof = calclulatetotalProfit(prof)
-        if total_prof>1080:
+        if total_prof>1078:
             b_profit=total_prof
             break
     print(b_profit)
@@ -1757,6 +1766,7 @@ def solveProblem():
     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     solve(cust_list, route_list, cost_matrix)
+    #TabuSearch(0, route_list, cost_matrix, cust_list)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
