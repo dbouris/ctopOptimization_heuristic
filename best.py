@@ -1664,6 +1664,9 @@ def randomRemoval(rt,cost_matrix,seed,route_list):
 
 
 
+
+
+
 def solveProblem():
     start = timeit.default_timer()
     route_list = getEmptyRoutes(6)
@@ -1696,10 +1699,10 @@ def solveProblem():
     #VND(route_list, cost_matrix)
 
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    #LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    solve(cust_list, route_list, cost_matrix)
-    TabuSearch(0, route_list, cost_matrix, cust_list)
+    #solve(cust_list, route_list, cost_matrix)
+    #TabuSearch(0, route_list, cost_matrix, cust_list)
 
     # VND(route_list, cost_matrix)
     # solve(cust_list, route_list, cost_matrix)
@@ -1712,13 +1715,14 @@ def solveProblem():
     print(total_prof)
     for p in prof:
         print(p)
-    for j in range(0,3):
+    for j in range(0,6):
         randomRemoval(route_list[3],cost_matrix,20,route_list)
-        randomRemoval(route_list[4],cost_matrix,40,route_list)
-        #randomRemoval(route_list[5],cost_matrix,j,route_list)
+        randomRemoval(route_list[4],cost_matrix,40,route_list)       
+        #randomRemoval(route_list[0],cost_matrix,50,route_list)
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         
+           
         candidates = generatePairs(cust_list)
         servedpairs=[]
         candidates2=[]   
@@ -1729,29 +1733,23 @@ def solveProblem():
         
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
-        LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-        
+            
+        LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)        
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         TabuSearch(0, route_list, cost_matrix, cust_list)
-        candidates = generatePairs(cust_list)
-        servedpairs=[]
-        candidates2=[]   
-        candidates2 = generatePairs(cust_list)
-        allservedpairs=[]
-        allservedpairs=generateServedPairs(cust_list)
-    
-    
-        for r in route_list:
-            servedpairs.append(generateServedPairs(r.route))
+        
         
         prof = calclulateProfitRoute(route_list)
         total_prof = calclulatetotalProfit(prof)
-        if total_prof>1078:
+        if total_prof>1080:
             b_profit=total_prof
             break
     print(b_profit)
-    #TabuSearch(0, route_list, cost_matrix, cust_list)
+    
+    
+    
+     #TabuSearch(0, route_list, cost_matrix, cust_list)
     candidates = generatePairs(cust_list)
     servedpairs=[]
     candidates2=[]   
@@ -1762,14 +1760,24 @@ def solveProblem():
     
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
-    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+       
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)    
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    
     solve(cust_list, route_list, cost_matrix)
+    #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)    
     #TabuSearch(0, route_list, cost_matrix, cust_list)
+    
+    
+     
+    
+        
+    
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
-
+    for p in prof:
+        print(p)
    
     f= open("sol.txt","w+")
     print("Total Profit")
