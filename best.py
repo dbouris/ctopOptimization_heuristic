@@ -20,7 +20,7 @@ class RelocationMove(object):
         self.targetNodePosition = None
         self.timeChangeOriginRt = None
         self.timeChangeTargetRt = None
-        self.moveCost = None
+        self.moveCost = 10**9
 
     def Initialize(self):
         self.originRoutePosition = None
@@ -65,7 +65,7 @@ class SwapMove(object):
         self.positionOfSecondNode = None
         self.timeChangeFirstRt = None
         self.timeChangeSecondRt = None
-        self.moveCost = None
+        self.moveCost = 10**9
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -81,7 +81,7 @@ class TwoOptMove(object):
         self.positionOfSecondRoute = None
         self.positionOfFirstNode = None
         self.positionOfSecondNode = None
-        self.moveCost = None
+        self.moveCost = 10**9
     def Initialize(self):
         self.positionOfFirstRoute = None
         self.positionOfSecondRoute = None
@@ -979,37 +979,34 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
 
             if operator == 0:
                 FindBestRelocationMove(rm, route_list, cost_matrix)
-                if rm.originRoutePosition is not None:
-                    if rm.moveCost < 0:
-                        ApplyRelocationMove(rm, route_list)
-                        print("                                                             MADE A RELOCATION")
-                        reloc = reloc + 1
-                    else:
-                        terminationCondition = True
-                        print(rm.moveCost)
-                        print("FAILED")
+                if rm.moveCost < 0:
+                    ApplyRelocationMove(rm, route_list)
+                    print("                                                             MADE A RELOCATION")
+                    reloc = reloc + 1
+                else:
+                    terminationCondition = True
+                    print(rm.moveCost)
+                    print("FAILED")
             elif operator == 1:
                 FindBestSwapMove(sm ,route_list, cost_matrix)
-                if sm.positionOfFirstRoute is not None:
-                    if sm.moveCost < 0:
-                        ApplySwapMove(sm, route_list)
-                        print("                                                             MADE A SWAP")
-                        swaps = swaps +1
-                    else:
-                        terminationCondition = True
-                        print("FAILED")
-                        print(sm.moveCost)
+                if sm.moveCost < 0:
+                    ApplySwapMove(sm, route_list)
+                    print("                                                             MADE A SWAP")
+                    swaps = swaps +1
+                else:
+                    terminationCondition = True
+                    print("FAILED")
+                    print(sm.moveCost)
             elif operator == 2:
                 FindBestTwoOptMove(top,route_list, cost_matrix)
-                if top.positionOfFirstRoute is not None:
-                    if top.moveCost < 0:
-                        ApplyTwoOptMove(top, route_list, cost_matrix)
-                        print("                                                             MADE A TWO OPT")
-                        opt = opt + 1
-                    else:
-                        terminationCondition = True
-                        print("FAILED")
-                        print(top.moveCost)
+                if top.moveCost < 0:
+                    ApplyTwoOptMove(top, route_list, cost_matrix)
+                    print("                                                             MADE A TWO OPT")
+                    opt = opt + 1
+                else:
+                    terminationCondition = True
+                    print("FAILED")
+                    print(top.moveCost)
             elif operator == 3:
                 best: PairInsertionMove = PairInsertion(pairlist, route_list, cost_matrix)
                 if best.profit_added > 0:
