@@ -1699,22 +1699,27 @@ def solveProblem():
     #VND(route_list, cost_matrix)
 
     #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    # solve(cust_list, route_list, cost_matrix)
-    # TabuSearch(0, route_list, cost_matrix, cust_list)
+    LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+    solve(cust_list, route_list, cost_matrix)
+    TabuSearch(0, route_list, cost_matrix, cust_list)
 
     # VND(route_list, cost_matrix)
     # solve(cust_list, route_list, cost_matrix)
     
     # DrawSolution(route_list, cust_list)
-    for j in range(0,5):
+    prof = calclulateProfitRoute(route_list)
+    total_prof = calclulatetotalProfit(prof)
+    print(total_prof)
+    for p in prof:
+        print(p)
+    for j in range(0,3):
         randomRemoval(route_list[3],cost_matrix,20,route_list)
         randomRemoval(route_list[4],cost_matrix,40,route_list)
         #randomRemoval(route_list[5],cost_matrix,j,route_list)
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         
-           
         candidates = generatePairs(cust_list)
         servedpairs=[]
         candidates2=[]   
@@ -1726,6 +1731,7 @@ def solveProblem():
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
         LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         TabuSearch(0, route_list, cost_matrix, cust_list)
@@ -1739,10 +1745,10 @@ def solveProblem():
     
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
-       
+        
         prof = calclulateProfitRoute(route_list)
         total_prof = calclulatetotalProfit(prof)
-        if total_prof>1080:
+        if total_prof>1078:
             b_profit=total_prof
             break
     print(b_profit)
@@ -1760,6 +1766,7 @@ def solveProblem():
     LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     solve(cust_list, route_list, cost_matrix)
+    #TabuSearch(0, route_list, cost_matrix, cust_list)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
