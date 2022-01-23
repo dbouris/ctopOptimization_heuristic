@@ -1675,14 +1675,14 @@ def solveProblem():
     cost_matrix = getCost_Matrix(cust_list)
 
     solve(cust_list, route_list, cost_matrix)
-    #DrawSolution(route_list, cust_list)
+   
     
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
 
     
-    #TwoPairExchange(route_list, cost_matrix, candidates2, servedpairs)
+    
     candidates = generatePairs(cust_list)
     servedpairs=[]
     candidates2=[]
@@ -1694,20 +1694,7 @@ def solveProblem():
     for r in route_list:
         servedpairs.append(generateServedPairs(r.route))
 
-    #VND_PROFIT(route_list, cost_matrix, candidates, candidates2, servedpairs, cust_list)
-    #solve(cust_list, route_list, cost_matrix)
-    #VND(route_list, cost_matrix)
-
-    #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-    #solve(cust_list, route_list, cost_matrix)
-    #TabuSearch(0, route_list, cost_matrix, cust_list)
-
-    # VND(route_list, cost_matrix)
-    # solve(cust_list, route_list, cost_matrix)
     
-    # DrawSolution(route_list, cust_list)
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
 
@@ -1715,21 +1702,18 @@ def solveProblem():
     print(total_prof)
     for p in prof:
         print(p)
-    for j in range(0,6):
+    for j in range(0,4):        
         randomRemoval(route_list[3],cost_matrix,20,route_list)
-        randomRemoval(route_list[4],cost_matrix,40,route_list)       
-        #randomRemoval(route_list[0],cost_matrix,50,route_list)
+        randomRemoval(route_list[4],cost_matrix,40,route_list)      
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
-        solve(cust_list, route_list, cost_matrix)
-        
+        solve(cust_list, route_list, cost_matrix)        
            
         candidates = generatePairs(cust_list)
         servedpairs=[]
         candidates2=[]   
         candidates2 = generatePairs(cust_list)
         allservedpairs=[]
-        allservedpairs=generateServedPairs(cust_list)
-    
+        allservedpairs=generateServedPairs(cust_list)    
         
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
@@ -1738,18 +1722,11 @@ def solveProblem():
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
         solve(cust_list, route_list, cost_matrix)
         TabuSearch(0, route_list, cost_matrix, cust_list)
-        
-        
+                
         prof = calclulateProfitRoute(route_list)
         total_prof = calclulatetotalProfit(prof)
-        if total_prof>1080:
-            b_profit=total_prof
-            break
-    print(b_profit)
-    
-    
-    
-     #TabuSearch(0, route_list, cost_matrix, cust_list)
+        
+        
     candidates = generatePairs(cust_list)
     servedpairs=[]
     candidates2=[]   
@@ -1765,14 +1742,7 @@ def solveProblem():
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
     solve(cust_list, route_list, cost_matrix)
-    #LocalSearch(6, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)    
-    #TabuSearch(0, route_list, cost_matrix, cust_list)
-    
-    
-     
-    
-        
-    
+       
     prof = calclulateProfitRoute(route_list)
     total_prof = calclulatetotalProfit(prof)
     print(total_prof)
@@ -1787,8 +1757,13 @@ def solveProblem():
     for i in range(0,len(route_list)):
         f.write("Route %d\n" %(i+1))
         print("Route %d" %(i+1))
-        for c in route_list[i].route:            
-            f.write("%d " %c.id)
+        k=0
+        for c in route_list[i].route:
+            k=k+1
+            if (k==len(route_list[i].route)):
+                f.write("%d" %c.id)
+            else:
+                f.write("%d " %c.id)            
             print("%d" %c.id,end =" ")
         f.write("\n")
         print("")
@@ -1796,20 +1771,7 @@ def solveProblem():
     execution_time = stop - start
 
     print("Program Executed in "+str(execution_time))
-    # for x in candidates:
-    #     cust = x.customers
-    #     print(cust[0].id, cust[1].id)
-    #     print("|||||||")
-    #     print(x.totalProfit)
-    #     print("|||||||")
-    #     print(x.totalDemand)
-    #     print("|||||||")
-    #     print(x.totalServiceTime)
-    #     print()
-
-    # print("Now the new testing:")
-    # print()
-    # PairInsertion(candidates, route_list, cost_matrix)
+   
        
 
 
