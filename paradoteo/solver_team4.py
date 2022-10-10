@@ -1475,6 +1475,7 @@ def solveProblem():
     cost_matrix = getCost_Matrix(cust_list)
     # get a first solution using the minimum insertion algorithm and a clever weighted index
     solve(cust_list, route_list, cost_matrix)
+    # DrawSolution(route_list, cust_list)
            
     
     candidates = generatePairs(cust_list)
@@ -1535,6 +1536,7 @@ def solveProblem():
     
    
     export_txt(route_list, total_prof)
+    DrawSolution(route_list, cust_list)
 
 
 if __name__ == "__main__":
