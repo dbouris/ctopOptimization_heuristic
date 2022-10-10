@@ -2,7 +2,7 @@ import csv
 import math
 from shutil import move
 from typing import NewType
-#from SolutionDrawer import *
+from SolutionDrawer import *
 import copy
 from itertools import combinations
 import pprint
@@ -11,8 +11,6 @@ import timeit
 import tabu_search
 
 # Creation of classes
-
-
 class RelocationMove(object):
     def __init__(self):
         self.originRoutePosition = None
@@ -320,6 +318,7 @@ def calclulatetotalProfit(prof):
         total_prof = total_prof +i
     return total_prof
 
+# calculate the total serv time of the solution
 def getTransferCost(route_list, cost_matrix):
     transfer = 0
     for i in route_list:
