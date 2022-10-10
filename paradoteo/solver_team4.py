@@ -941,15 +941,20 @@ def ApplyInsertion(newrt, best):
 
     best.customer.added = True
     
-
+# apply the pair move to the current solution
 def ApplyPairMove(best : PairInsertionMove,route_list):
+    # update the route list
     route_list[best.route].route = best.route_list
+    # update the time and capacity of the route
     route_list[best.route].time = best.route_time
+    # update the capacity of the route
     route_list[best.route].capacity = route_list[best.route].capacity + best.capacity_change
+    # mark the customers as added
     best.pair_added.customers[0].added = True
     best.pair_added.customers[1].added = True
     best.nodetoremove.added = False
 
+# apply the pair move (served pair) to the current solution 
 def ApplyPairMoveServed(best : PairInsertionMove,route_list):
     route_list[best.route].route = best.route_list
     route_list[best.route].time = best.route_time
@@ -958,11 +963,15 @@ def ApplyPairMoveServed(best : PairInsertionMove,route_list):
     best.pair_added.customers[1].added = True
     best.pservedremove.customers[0].added=False
     best.pservedremove.customers[1].added=False
-    
+
+# apply the move: PairMoveOneUnserved to the current solution
 def ApplyPairMoveOneUnserved(best : PairInsertionMove,route_list):
+    # update the route list
     route_list[best.route].route = best.route_list
+    # update the time and capacity of the route
     route_list[best.route].time = best.route_time
     route_list[best.route].capacity = route_list[best.route].capacity + best.capacity_change    
+    # mark the customers as added
     best.nodetoadd.added = True
     best.pservedremove.customers[0].added=False
     best.pservedremove.customers[1].added=False
@@ -982,8 +991,6 @@ def ApplyDestroy(best : PairInsertionMove,route_list):
     route_list[best.route].route = best.route_list
     route_list[best.route].time = best.route_time
     route_list[best.route].capacity = best.capacity 
-    #best.nodetoadd.added = True   
-    #best.nodetoremove.added = False
 
 
 
@@ -1155,46 +1162,56 @@ def OneServedOneUnservedExchange(route_list, cost_matrix, c_list):
     return best
 
 
-
+# find the best move for adding one unserved customer and removing two served customers
 def TwoServedOneUnservedExchange(route_list, cost_matrix, c_list, pairserved): 
     best = PairInsertionMove()
-    for c in c_list:       
+    # iterate over all customers
+    for c in c_list:      
+        # if the customer is not added 
         if c.added == False:
-            for i in range(0,len(route_list)-1):                                
+            # iterate over all the routes
+            for i in range(0,len(route_list)-1):    
+                # iterate over all the pairs in the route (served)                            
                 for pserved in pairserved[i]:
                     if pserved.customers[0].added == True and pserved.customers[1].added == True:
-                         if c.profit >  pserved.totalProfit: 
-                             if route_list[i].capacity - pserved.totalDemand + c.demand > 150:
-                                 #print("CAPACITY ISSUE")
-                                 continue
-                             
-                             if route_list[i].time - pserved.totalServiceTime + c.serv_time > 200 :
-                                 #print("CAPACITY ISSUE")
-                                 continue
-                             candidateroute = route_list[i].route[1:len(route_list[i].route)-1]                             
-                             candidateroute.remove(pserved.customers[0])
-                             candidateroute.remove(pserved.customers[1]) 
-                             
-                             candidateroute.append(c)
-                             newrt = getEmptyRoutes(1)[0]
-                             for cand in candidateroute:
-                                 cand.added = False
-                             for j in range(0,len(candidateroute)):
-                                 best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
-                                 ApplyInsertion(newrt, best_inser)
-                             c.added=False
-                             profit =  c.profit - pserved.totalProfit                             
-                             if newrt.time > 200:                                 
-                                 continue 
-                             if profit > best.profit_added:                                 
-                                 best.profit_added = profit 
-                                 best.route = route_list[i].id
-                                 best.route_list = newrt.route
-                                 best.route_time = newrt.time
-                                 best.nodetoadd = c
-                                 best.pservedremove = pserved
-                                 best.capacity_change = c.demand  - (pserved.customers[0].demand + pserved.customers[1].demand)                           
-                                 
+                        # check if the profit to be added is greater than the profit to be removed
+                        if c.profit >  pserved.totalProfit: 
+                            # check if the customer can fit in the route demand wise
+                            if route_list[i].capacity - pserved.totalDemand + c.demand > 150:
+                                continue
+                            # check if the customer can fit in the route time wise
+                            if route_list[i].time - pserved.totalServiceTime + c.serv_time > 200 :
+                                continue
+                            
+                            # find the best position for the customer to be inserted
+                            candidateroute = route_list[i].route[1:len(route_list[i].route)-1]                             
+                            candidateroute.remove(pserved.customers[0])
+                            candidateroute.remove(pserved.customers[1]) 
+                            
+                            candidateroute.append(c)
+                            newrt = getEmptyRoutes(1)[0]
+                            for cand in candidateroute:
+                                cand.added = False
+                            for j in range(0,len(candidateroute)):
+                                best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                                # apply the insertion
+                                ApplyInsertion(newrt, best_inser)
+                            c.added=False
+                            # calculate the profit change
+                            profit =  c.profit - pserved.totalProfit    
+                            # check if the change is feasible time wise                         
+                            if newrt.time > 200:                                 
+                                continue
+                            # if the change is feasible, check if it is better than the best move we have stored
+                            if profit > best.profit_added:                                 
+                                best.profit_added = profit 
+                                best.route = route_list[i].id
+                                best.route_list = newrt.route
+                                best.route_time = newrt.time
+                                best.nodetoadd = c
+                                best.pservedremove = pserved
+                                best.capacity_change = c.demand  - (pserved.customers[0].demand + pserved.customers[1].demand)                           
+    # return the best move                     
     return best
      
 def calculate_route_details(route, cost_matrix):
@@ -1388,7 +1405,8 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
 
     route_list = copy.deepcopy(bestSolution)
 
-
+# define a function to random remove a customer from a route and replacing it with
+# another customer from another route or unserved customer
 def randomRemoval(rt,cost_matrix,seed,route_list):
     best = PairInsertionMove()
     remnodes=[]
@@ -1440,11 +1458,14 @@ def solveProblem():
     servedpairs=[]
     candidates2=[]
     
-  
+    # apply a combination of Tabu, Local Search and randomRemoval to further improve the solution
     for j in range(0,4):        
+        # apply random removal to the solution
         randomRemoval(route_list[3],cost_matrix,20,route_list)
-        randomRemoval(route_list[4],cost_matrix,40,route_list)      
+        randomRemoval(route_list[4],cost_matrix,40,route_list)  
+        # apply local search to the solution: relocation    
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        # check if we can further add any customers to the solution
         solve(cust_list, route_list, cost_matrix)        
            
         candidates = generatePairs(cust_list)
@@ -1456,10 +1477,13 @@ def solveProblem():
         
         for r in route_list:
             servedpairs.append(generateServedPairs(r.route))
-            
+        # apply local search to the solution: swap
         LocalSearch(4, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)        
+        # apply local search to the solution: relocation
         LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
+        # check if we can further add any customers to the solution
         solve(cust_list, route_list, cost_matrix)
+        # apply the tabu search heuristic to the solution
         TabuSearch(0, route_list, cost_matrix, cust_list)
                
         
