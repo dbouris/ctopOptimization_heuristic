@@ -1,7 +1,7 @@
 import csv
 import math
 from typing import NewType
-from SolutionDrawer import *
+from paradoteo.SolutionDrawer import *
 import copy
 from itertools import combinations
 import pprint

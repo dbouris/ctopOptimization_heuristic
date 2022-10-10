@@ -10,6 +10,18 @@ import random
 import timeit
 import tabu_search
 
+# insert the problem variables
+Max_Time = 200
+Max_Capacity = 150
+Max_Profit = 35
+
+# initialize the weights for the insertion criterion
+# the weights have been optimaly calculated to fit the problem.
+profit_weight = 0.56
+demand_weight = 0.12
+time_weight = 0.32
+
+
 # Creation of classes
 class RelocationMove(object):
     def __init__(self):
@@ -350,9 +362,11 @@ def getTimeInRoute(route, cost_matrix):
 
         
 
-
+# used to draw the solution in a matplotlib plot
 def DrawSolution(route_list, cust_list):
+    # first, draw the routes
     SolDrawer.drawRoutes(route_list)
+    # then, draw the customers
     SolDrawer.drawPointsUsed(cust_list)
 
 
@@ -571,24 +585,32 @@ def FindBestSwapMove(sm, route_list, cost_matrix):
                         if moveCost < sm.moveCost:
                             StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
-
+# the function checks if there is a violation of the capacity constraint of the problem
+# used in the two-opt move
 def CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
 
+        # calculate the capacity of the first segment of the first route
         rt1FirstSegmentLoad = 0
         for i in range(0, nodeInd1 + 1):
             n = rt1.route[i]
             rt1FirstSegmentLoad += n.demand
+        # get the capacity of the second segment of the first route by subtracting the first segment 
+        # from the total capacity of the route
         rt1SecondSegmentLoad = rt1.capacity - rt1FirstSegmentLoad
 
+        # get the capacity of the first segment of the second route
         rt2FirstSegmentLoad = 0
         for i in range(0, nodeInd2 + 1):
             n = rt2.route[i]
             rt2FirstSegmentLoad += n.demand
+        # get the capacity of the second segment of the second route by subtracting the first segment
+        # from the total capacity of the route
         rt2SecondSegmentLoad = rt2.capacity - rt2FirstSegmentLoad
-        # print("ROUTE 1 NEW CAPACITY: ", rt1FirstSegmentLoad + rt2SecondSegmentLoad)
-        # print("ROUTE 2 NEW CAPACITY: ", rt2FirstSegmentLoad + rt1SecondSegmentLoad)
+
+        # check if the capacity of the first route is violated
         if (rt1FirstSegmentLoad + rt2SecondSegmentLoad > 150):
             return True
+        # check if the capacity of the second route is violated
         if (rt2FirstSegmentLoad + rt1SecondSegmentLoad > 150):
             return True
 
@@ -602,71 +624,78 @@ def StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
     top.positionOfSecondNode = nodeInd2
     top.moveCost = moveCost
 
-
+# find the best two opt move: break 2 routes and merge them in a different way
+# this move is used to untangle the routes
 def FindBestTwoOptMove(top, route_list, cost_matrix):
-        for rtInd1 in range(0, len(route_list)):
-            rt1 = route_list[rtInd1]
-            for rtInd2 in range(rtInd1, len(route_list)):
-                rt2 = route_list[rtInd2]
-                #print("CHECKING ROUTE: ", rtInd1, "WITH: ", rtInd2)
-                for nodeInd1 in range(0, len(rt1.route) - 1):
-                    start2 = 0
-                    if (rt1 == rt2):
-                        start2 = nodeInd1 + 2
-
-                    for nodeInd2 in range(start2, len(rt2.route) - 1):
-                        moveCost = 10 ** 9
-
-                        A = rt1.route[nodeInd1]
-                        B = rt1.route[nodeInd1 + 1]
-                        K = rt2.route[nodeInd2]
-                        L = rt2.route[nodeInd2 + 1]
+    # loop over all the routes, as the first route
+    for rtInd1 in range(0, len(route_list)):
+        rt1 = route_list[rtInd1]
+        # loop over all the routes, as the second route
+        for rtInd2 in range(rtInd1, len(route_list)):
+            rt2 = route_list[rtInd2]
+            # loop over all the nodes in the first route, as the first breaking point
+            for nodeInd1 in range(0, len(rt1.route) - 1):
+                start2 = 0
+                # if the two routes are the same, start the second breaking point from the next node
+                if (rt1 == rt2):
+                    start2 = nodeInd1 + 2
+                # loop over all the nodes in the second route, as the second breaking point
+                for nodeInd2 in range(start2, len(rt2.route) - 1):
+                    moveCost = 10 ** 9
+                    # get the node ids at the breaking points
+                    A = rt1.route[nodeInd1]
+                    B = rt1.route[nodeInd1 + 1]
+                    K = rt2.route[nodeInd2]
+                    L = rt2.route[nodeInd2 + 1]
+                    
+                    # if the two routes are the same
+                    if rt1 == rt2:
+                        # if the breaking points are adjacent, skip the move
+                        if nodeInd1 == 0 and nodeInd2 == len(rt1.route) - 2:
+                            continue
+                        # calculate the cost of the move
+                        costAdded = cost_matrix[A.id][K.id] + cost_matrix[B.id][L.id]
+                        costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
+                        moveCost = costAdded - costRemoved
+                        # check for time violation
+                        if rt1.time + moveCost > 200:
+                            continue
+                    # if the two routes are different
+                    else:
+                        # if the points to break are the first ones of each route, skip the move
+                        if nodeInd1 == 0 and nodeInd2 == 0:
+                            continue
+                        if nodeInd1 == len(rt1.route) - 2 and  nodeInd2 == len(rt2.route) - 2:
+                            continue
+                        # check if the capacity constraint is violated for both the routes
+                        if CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                            #print("CAPACITY VIOLATION")
+                            continue
+                        # calculate the cost of the move
+                        costAdded = cost_matrix[A.id][L.id] + cost_matrix[B.id][K.id]
+                        costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
+                        moveCost = costAdded - costRemoved
                         
-                        #print("WORKING FOR NODES: ", A.id, "AND ", K.id)
+                        # get the segments of each route to break
+                        relocatedSegmentOfRt1 = rt1.route[nodeInd1 + 1 :]
+                        relocatedSegmentOfRt2 = rt2.route[nodeInd2 + 1 :]
+                        # calculate the time of the first segment to relocate for both the routes
+                        TimeReloc1 = getTimeInRoute(relocatedSegmentOfRt1, cost_matrix)
+                        remaining1 = rt1.time - TimeReloc1
 
-                        if rt1 == rt2:
-                            if nodeInd1 == 0 and nodeInd2 == len(rt1.route) - 2:
-                                continue
-                            costAdded = cost_matrix[A.id][K.id] + cost_matrix[B.id][L.id]
-                            costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
-                            moveCost = costAdded - costRemoved
-                            # check time violations
-                            if rt1.time + moveCost > 200:
-                                continue
+                        TimeReloc2 = getTimeInRoute(relocatedSegmentOfRt2, cost_matrix)
+                        remaining2 = rt2.time - TimeReloc2
 
+                        # check if the time constraint is violated for both the routes
+                        # importan to add and remove the new links cost
+                        if remaining1 + TimeReloc2 - cost_matrix[A.id][B.id] + cost_matrix[A.id][L.id] > 200:
+                            continue
+                        if remaining2 + TimeReloc1 - cost_matrix[K.id][L.id] +  cost_matrix[B.id][K.id] > 200:
+                            continue
 
-
-                        else:
-                            if nodeInd1 == 0 and nodeInd2 == 0:
-                                continue
-                            if nodeInd1 == len(rt1.route) - 2 and  nodeInd2 == len(rt2.route) - 2:
-                                continue
-
-                            if CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
-                                #print("CAPACITY VIOLATION")
-                                continue
-                            costAdded = cost_matrix[A.id][L.id] + cost_matrix[B.id][K.id]
-                            costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
-                            moveCost = costAdded - costRemoved
-                            
-                            #check time constraints
-                            relocatedSegmentOfRt1 = rt1.route[nodeInd1 + 1 :]
-                            relocatedSegmentOfRt2 = rt2.route[nodeInd2 + 1 :]
-
-                            TimeReloc1 = getTimeInRoute(relocatedSegmentOfRt1, cost_matrix)
-                            remaining1 = rt1.time - TimeReloc1
-
-                            TimeReloc2 = getTimeInRoute(relocatedSegmentOfRt2, cost_matrix)
-                            remaining2 = rt2.time - TimeReloc2
-
-                            if remaining1 + TimeReloc2 - cost_matrix[A.id][B.id] + cost_matrix[A.id][L.id] > 200:
-                                continue
-                            if remaining2 + TimeReloc1 - cost_matrix[K.id][L.id] +  cost_matrix[B.id][K.id] > 200:
-                                continue
-
-                        #print(moveCost)
-                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
-                            StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
+                    # if the move is better than the best move so far, store it
+                    if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                        StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
 
 
@@ -699,7 +728,7 @@ def ApplyTwoOptMove(top, route_list, cost_matrix):
         rt1.route.extend(relocatedSegmentOfRt2)
         rt2.route.extend(relocatedSegmentOfRt1)
 
-        #lathooooos
+        
         UpdateRouteCostAndLoad(rt1, cost_matrix)
         UpdateRouteCostAndLoad(rt2, cost_matrix)
 
@@ -856,15 +885,7 @@ def solve(cust_list, route_list, cost_matrix):
             keep_going = False
 
 
-Max_Time = 200
-Max_Capacity = 150
-Max_Profit = 35
 
-
-#weigths
-profit_weight = 0.56
-demand_weight = 0.12
-time_weight = 0.32
 
 # get all the possible pairs of customers which are not served
 def generatePairs(cust_list):
@@ -1233,59 +1254,7 @@ def calculate_route_details(route, cost_matrix):
         rt_time += travel_time
     return rt_time, rt_load, rt_profit
 
-def VND(route_list, cost_matrix):
-        bestSolution = copy.deepcopy(route_list)
-        VNDIterator = 0
-        kmax = 2
-        rm = RelocationMove()
-        sm = SwapMove()
-        top = TwoOptMove()
-        k = 0
 
-        while k <= kmax:
-            InitializeOperators(rm, sm, top)
-            if k == 0:
-                FindBestRelocationMove(rm, route_list, cost_matrix)
-               
-                if rm.originRoutePosition is not None and rm.moveCost < 0:
-                    ApplyRelocationMove(rm, route_list)
-                   
-                    
-                    VNDIterator = VNDIterator + 1
-                    k = 0
-                else:
-                    k += 1
-            elif k == 1:
-                FindBestSwapMove(sm ,route_list, cost_matrix)
-               
-                if sm.positionOfFirstRoute is not None and sm.moveCost < 0:
-                    ApplySwapMove(sm, route_list)
-                   
-                    VNDIterator = VNDIterator + 1
-                    k = 0
-                else:
-                    k += 1
-            elif k == 2:
-                FindBestTwoOptMove(top,route_list, cost_matrix)
-               
-                if top.positionOfFirstRoute is not None and top.moveCost < 0:
-                    ApplyTwoOptMove(top, route_list, cost_matrix)
-                    
-                    rt_time, rt_load, rt_profit = calculate_route_details(route_list[top.positionOfFirstRoute].route, cost_matrix)
-                    # if rt_time > 200:
-                    #     print("TIME VIOLATION")
-                    VNDIterator = VNDIterator + 1
-                    k = 0
-                else:
-                    k += 1
-
-            bestSolution = copy.deepcopy(route_list)
-            prof = calclulateProfitRoute(bestSolution)
-            total_prof = calclulatetotalProfit(prof)
-          
-
-            
-        
 
 
 def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list):
@@ -1338,7 +1307,9 @@ def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list)
             prof = calclulateProfitRoute(bestSolution)
             total_prof = calclulatetotalProfit(prof)
             
-
+# the tabu search function, implements the a functionality similar to the Local Search function
+# but lets the algorithm to further explore the neighbourhood of the current solution by choosing solutions
+# which do not improve the current solution
 def TabuSearch(operator, route_list, cost_matrix, cust_list):
     solution_cost_trajectory = []
     random.seed(30)
@@ -1353,24 +1324,30 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
    
 
     while terminationCondition is False:
+        # choose the operator to be used in random
         operator = random.randint(0,2)
         InitializeOperators(rm, sm, top)
         
         # Relocations
         if operator == 0:
+            # find the best relocation move
             tabu_search.FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
+            # if there is a move found, apply it
             if rm.originRoutePosition is not None:
                 tabu_search.ApplyRelocationMoveTabu(rm, route_list, localSearchIterator)
                 
-                
         # Swaps
         elif operator == 1:
+            # find the best swap move
             tabu_search.FindBestSwapMoveTabu(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
+            # if there is a move found, apply it
             if sm.positionOfFirstRoute is not None:
                 tabu_search.ApplySwapMoveTabu(sm, route_list, localSearchIterator)
-                
+        # two opt    
         elif operator == 2:
+            # find the best two opt move
             tabu_search.FindBestTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, bestSolution)
+            # find the best two opt move
             if top.positionOfFirstRoute is not None:
                 tabu_search.ApplyTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator)
                 
@@ -1378,8 +1355,6 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
         # self.ReportSolution(self.sol)
         
         solution_cost_trajectory.append(getTransferCost(route_list, cost_matrix))
-
-        
 
         if (getTransferCost(route_list, cost_matrix) < getTransferCost(bestSolution, cost_matrix)):
             bestSolution = copy.deepcopy(route_list)
@@ -1435,8 +1410,6 @@ def randomRemoval(rt,cost_matrix,seed,route_list):
     best.route = rt.id
     best.route_list = newrt.route
     best.route_time = newrt.time
-    #best.nodetoadd = c
-    #best.pservedremove = pserved
     
     best.capacity = newrt.capacity
     ApplyDestroy(best, route_list)

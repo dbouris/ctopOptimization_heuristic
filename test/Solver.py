@@ -1,6 +1,6 @@
 from VRP_Model import *
 import random
-from SolutionDrawer import *
+from paradoteo.SolutionDrawer import *
 
 class Solution:
     def __init__(self):

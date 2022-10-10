@@ -1,6 +1,6 @@
 import csv
 import math
-from SolutionDrawer import *
+from paradoteo.SolutionDrawer import *
 import copy
 
 from exhaustive_with_insertion_factor import IdentifyMinimumCostInsertion
