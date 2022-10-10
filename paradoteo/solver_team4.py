@@ -901,43 +901,48 @@ def generateServedPairs(cust_list):
 
     return pairs
 
-
+# find the best possible addition for a node in a route list 
 def IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix):
+    # initialize the best insertion
     best_insertion = OneRouteBi()
+    # iterate through all the customers which we need to add
     for customer in candidateroute:
+        # if the customer is not added
         if customer.added == False:
-
+            # iterate over all the possible positions in the route for the node to be added
             for j in range(0, len(newrt.route) - 1):
+                # get the customers ids
                 A = newrt.route[j].id
                 B = newrt.route[j + 1].id
-            
+                # get the cost of the insertion
                 costAdded = cost_matrix[A][customer.id] + cost_matrix[customer.id][B]
                 costRemoved = cost_matrix[A][B]
                 
                 trialCost = costAdded - costRemoved + customer.serv_time
 
-                    
+                # if the cost is lower than the best cost so far, update the best cost
                 if trialCost < best_insertion.time:
                     best_insertion.customer = customer
                     best_insertion.position = j
                     best_insertion.time = trialCost 
-                    
+        # if the customer is added, we do not need to add it again      
         else:
             continue
+    # return the best insertion for the current state of the solution
     return best_insertion
 
 
 
 def ApplyInsertion(newrt, best):
-    #updates time and capacity of the route
+    # update time and capacity of the route
     newrt.capacity += best.customer.demand
     newrt.time +=  best.time 
 
-    #adds the node to its new position
+    # add the node to its new position
     r = newrt.route
     r.insert(best.position+1,best.customer)
     newrt.route = r
-
+    # mark the customer as added
     best.customer.added = True
     
 # apply the pair move to the current solution
