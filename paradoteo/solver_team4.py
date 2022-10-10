@@ -1436,8 +1436,32 @@ def randomRemoval(rt,cost_matrix,seed,route_list):
     best.capacity = newrt.capacity
     ApplyDestroy(best, route_list)
 
-
-
+# export the solution to a txt file
+def export_txt(route_list, total_prof):
+    # open the file
+    f= open("solution.txt","w+")
+    print("Total Profit")
+    # write the total profit
+    f.write("Total Profit\n")
+    print("%d" %total_prof)
+    # write the total profit
+    f.write("%d\n" %total_prof)
+    # iterate through the routes
+    for i in range(0,len(route_list)):
+        # print the route id
+        f.write("Route %d\n" %(i+1))
+        print("Route %d" %(i+1))
+        k=0
+        # iterate through the routes customers
+        for c in route_list[i].route:
+            k=k+1
+            if (k==len(route_list[i].route)):
+                f.write("%d" %c.id)
+            else:
+                f.write("%d " %c.id)            
+            print("%d" %c.id,end =" ")
+        f.write("\n")
+        print("")
 
 
 # the function handles and calls them methods to solve the problem
@@ -1503,29 +1527,16 @@ def solveProblem():
     LocalSearch(0, route_list, cost_matrix, candidates,candidates2,servedpairs,cust_list)
     
     solve(cust_list, route_list, cost_matrix)
-       
+    
+    # calculate the profit of the solution
     prof = calclulateProfitRoute(route_list)
+    # calculate the total cost of the solution
     total_prof = calclulatetotalProfit(prof)
     
    
-    f= open("solution.txt","w+")
-    print("Total Profit")
-    f.write("Total Profit\n")
-    print("%d" %total_prof)
-    f.write("%d\n" %total_prof)
-    for i in range(0,len(route_list)):
-        f.write("Route %d\n" %(i+1))
-        print("Route %d" %(i+1))
-        k=0
-        for c in route_list[i].route:
-            k=k+1
-            if (k==len(route_list[i].route)):
-                f.write("%d" %c.id)
-            else:
-                f.write("%d " %c.id)            
-            print("%d" %c.id,end =" ")
-        f.write("\n")
-        print("")
+    export_txt(route_list, total_prof)
+
+
     
 
    
