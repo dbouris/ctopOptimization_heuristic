@@ -733,17 +733,21 @@ def ApplyTwoOptMove(top, route_list, cost_matrix):
         UpdateRouteCostAndLoad(rt2, cost_matrix)
 
 
-
+# function to update the cost and load of a route
 def UpdateRouteCostAndLoad(rt, cost_matrix):
     tc = 0
     tl = 0
+    # iterate over all the nodes in the route
     for i in range(0, len(rt.route) - 1):
         A = rt.route[i]
         B = rt.route[i+1]
+        # add the cost of the link between the two nodes
         tc += cost_matrix[A.id][B.id]
+        # if the node is not the depot, add the load of the node
         if i !=0:
             tc += A.serv_time
             tl += A.demand
+    # update the cost and load of the route
     rt.capacity = tl
     rt.time = tc
 
@@ -854,11 +858,6 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
                     # there cannot be any further improvement using the one served one unserved move operator
                     terminationCondition = True
                     
-
-            
-
-
-
             bestSolution = copy.deepcopy(route_list)
             prof = calclulateProfitRoute(bestSolution)
             total_prof = calclulatetotalProfit(prof)
@@ -1417,7 +1416,7 @@ def randomRemoval(rt,cost_matrix,seed,route_list):
 # export the solution to a txt file
 def export_txt(route_list, total_prof):
     # open the file
-    f= open("solution.txt","w+")
+    f = open("solution.txt","w+")
     print("Total Profit")
     # write the total profit
     f.write("Total Profit\n")
@@ -1429,15 +1428,15 @@ def export_txt(route_list, total_prof):
         # print the route id
         f.write("Route %d\n" %(i+1))
         print("Route %d" %(i+1))
-        k=0
+        k = 0
         # iterate through the routes customers
         for c in route_list[i].route:
-            k=k+1
-            if (k==len(route_list[i].route)):
+            k = k + 1
+            if (k == len(route_list[i].route)):
                 f.write("%d" %c.id)
             else:
                 f.write("%d " %c.id)            
-            print("%d" %c.id,end =" ")
+            print("%d" %c.id, end =" ")
         f.write("\n")
         print("")
 
