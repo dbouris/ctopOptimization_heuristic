@@ -192,31 +192,38 @@ def getCustomers(txt_file):
     
 
 
-
+# finds the best insertion for our solution based on an insertion criterion and returns 
+# the best insertion object
 def identifyMinimumCostInsertion(rt_list,cust_list, cost_matrix):
+    # initialize the BestInsertion object
     best_insertion = BestInsertion()
+    # iterate over all customers 
     for customer in cust_list:
+        # check if the customer is already added to the solution
         if customer.added == False:
+            # iterate over all routes
             for rt in rt_list:
-                
+                # check if the customer fits in the route demand wise
                 if rt.capacity + customer.demand <= 150:
-                    
+                    # check the insertion criterion for all the possible positions-insertions in the route
                     for j in range(0, len(rt.route) - 1):
+                        # get the customers ids
                         A = rt.route[j].id
                         B = rt.route[j + 1].id
-                    
+                        # calculate the cost of inserting the customer in the route
+                        # there is some cost added and some cost removed after inserting the customer
                         costAdded = cost_matrix[A][customer.id] + cost_matrix[customer.id][B]
                         costRemoved = cost_matrix[A][B]
-                        
+                        # get the trial cost
                         trialCost = costAdded - costRemoved + customer.serv_time
                         
-
+                        # check if the customer fits in the route time wise
                         if rt.time  + trialCost <= 200:
-                        #calculate the insertion criterion
+                            #calculate the insertion criterion
                             criterion = calculate_insertion_criterion(customer,trialCost)
-                            
+                            # check if the current insertion criterion is better than our previous best
                             if criterion < best_insertion.cl:
-                                
+                                # update the best insertion object
                                 best_insertion.customer = customer
                                 best_insertion.route = rt.id
                                 best_insertion.position = j
@@ -224,6 +231,7 @@ def identifyMinimumCostInsertion(rt_list,cust_list, cost_matrix):
                                 best_insertion.cl = criterion
                             
                 else:
+                    # if the customer does not fit in the route demand wise, continue to the next route
                     continue
     return best_insertion
 
@@ -238,33 +246,48 @@ def getEmptyRoutes(trucks):
     return route_list
 
 
-
+# check if all the customers in the problem are added in the solution
+# return true if all the customers are not added, else false
 def not_all_added(cust_list):
     v = False
+    # iterate through the customers
     for i in cust_list:
+        # if a customer is not added, return true
         if i.added == False:
             v = True
     return v
 
+# calculate the weighted insertion criterion
+# the criterion consists of three factors: time, demand and profit added
+# the criterion is based on the following idea: "We prefer a customer which takes low time to serve, takes little 
+# demand and has high profit"
 def calculate_insertion_criterion(customer,trial_cost):
     
+    # get the 3 variables based on the pre calculated weights
     time_var = ((1+trial_cost)/(1+Max_Time))**time_weight
     demand_var = (customer.demand/Max_Capacity)**demand_weight
     profit_var = (customer.profit/ Max_Profit )**profit_weight
+    # calculate the criterion
     ic = (time_var * demand_var)/profit_var
     return ic
 
 
 
 
-
+# inserts the customer in the route in the position given
+# the customer and the info for the insertion position is given in the best_fit object
 def InsertBestFit(best_fit,route_list):
-    
+ 
+    # get the route list to insert into and insert the customer
     r = route_list[best_fit.route].route
     r.insert(best_fit.position+1,best_fit.customer)
+    # update the route info
     route_list[best_fit.route].route = r
+    # update the route capacity
     route_list[best_fit.route].capacity += best_fit.customer.demand
+    # update the route time
     route_list[best_fit.route].time +=  best_fit.time
+    # mark the customer as added
     best_fit.customer.added = True
 
 
@@ -407,25 +430,33 @@ def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator):
 
         SetTabuIterator(B,localSearchIterator)
 
+# apply the relocation move on our current solution
 def ApplyRelocationMove(rm, route_list):
 
-
+        # get the origin and target route
         originRt = route_list[rm.originRoutePosition]
         targetRt = route_list[rm.targetRoutePosition]
-
+        # get the node to be relocated
         B = originRt.route[rm.originNodePosition]
-
+        # if the origin and target route are the same
         if originRt == targetRt:
+            # delete the node from the origin route
+            # the deletion causes the list to be shifted
             del originRt.route[rm.originNodePosition]
+            # check if the node is inserted before or after the target node to avoid the shifting problem
             if (rm.originNodePosition < rm.targetNodePosition):
                 targetRt.route.insert(rm.targetNodePosition, B)
             else:
                 targetRt.route.insert(rm.targetNodePosition + 1, B)
-
+            # update the time of the target route
             originRt.time += rm.moveCost
+        # if the origin and target route are different
         else:
+            # delete the node from the origin route
             del originRt.route[rm.originNodePosition]
+            # insert the node in the target route
             targetRt.route.insert(rm.targetNodePosition + 1, B)
+            # update time and capacity of the origin and target route
             originRt.time += rm.timeChangeOriginRt
             targetRt.time += rm.timeChangeTargetRt
             originRt.capacity -= B.demand
@@ -442,6 +473,9 @@ def StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondN
     sm.timeChangeSecondRt = costChangeSecondRoute
     sm.moveCost = moveCost
 
+# store the best relocation move in the RelocationMove object
+# keep track of the route and node positions
+# update the move cost on both the target and origin routes
 def StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm:RelocationMove):
         rm.originRoutePosition = originRouteIndex
         rm.originNodePosition = originNodeIndex
@@ -498,50 +532,51 @@ def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix,
                         
                         if (moveCost < rm.moveCost):
                             StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
-        
+#  find the best relocation move for the current solution   
 def FindBestRelocationMove(rm, route_list, cost_matrix):
+        # iterate over all the routes in the solution as the origin route
         for originRouteIndex in range(0, len(route_list)):
+            # get the origin route
             rt1 = route_list[originRouteIndex]
+            # iterate over all the routes in the solution as the target route
             for targetRouteIndex in range (0, len(route_list)):
+                # get the target route
                 rt2 = route_list[targetRouteIndex]
-                #print("CHECKING ORIGIN: ", originRouteIndex, "TARGET: ", targetRouteIndex)
+                # iterate over all the nodes in the origin route, as the origin node
                 for originNodeIndex in range (1, len(rt1.route) - 1):
+                    # iterate over all the nodes in the target route, as the target node
                     for targetNodeIndex in range (0, len(rt2.route) - 1):
                         
-
+                        # continue if the origin and target nodes are the same in the same route, or if they are consecutive
                         if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
                             continue
-
+                        # get the node to be relocated, the node before and after it
                         A = rt1.route[originNodeIndex - 1]
                         B = rt1.route[originNodeIndex]
                         C = rt1.route[originNodeIndex + 1]
-
+                        # get the target node and the node after it
                         F = rt2.route[targetNodeIndex]
                         G = rt2.route[targetNodeIndex + 1]
 
-                        #print("SEND ", B.id, "TO: ", F.id)
-
+                        # if the relocation is between different routes, check if the target route has enough capacity
                         if originRouteIndex != targetRouteIndex:
+                            # if the capacity of the target route is exceeded, continue
                             if rt2.capacity + B.demand > 150:
-                                #print("CAPACITY ISSUE AT ROUTE 2")
                                 continue
-
+                        # calculate the cost of the move
                         costAdded = cost_matrix[A.id][C.id] + cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id]
                         costRemoved = cost_matrix[A.id][B.id] + cost_matrix[B.id][C.id] + cost_matrix[F.id][G.id]
-
+                        # calculate the cost change of the origin and target routes
                         originRtCostChange = cost_matrix[A.id][C.id] - cost_matrix[A.id][B.id] - cost_matrix[B.id][C.id] 
                         targetRtCostChange = cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id] - cost_matrix[F.id][G.id] + rt1.route[originNodeIndex].serv_time
-
+                        # check if the time of the target route is not exceeded
                         if rt2.time + targetRtCostChange > 200:
                             continue 
-                        
-                       
-                       
+                        # calculate the cost of the move
                         moveCost = costAdded - costRemoved
                         #print(moveCost)
                         
-                        
-                        
+                        # if the move cost is better than the current best move, store it
                         if (moveCost < rm.moveCost):
                             StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
         
@@ -959,8 +994,17 @@ def UpdateRouteCostAndLoad(rt, cost_matrix):
     rt.capacity = tl
     rt.time = tc
 
-
+# the LocalSearch function contains local search operators which are applied on the solution
+# operator 0: Relocation Move
+# operator 1: Swap Move
+# operator 2: 2-opt Move
+# operator 3: Pair Insertion Move
+# operator 4: 2-Pair Exchange Move
+# operator 5: TwoServedOneUnservedMove
+# operator 6: OneServedOneUnservedMove
 def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserved,c_list):
+        
+        # create a copy of the solution to be used in the local search to avoid changing the original one
         bestSolution = copy.deepcopy(route_list)
         terminationCondition = False
         localSearchIterator = 0
@@ -972,38 +1016,48 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
         sm = SwapMove()
         top = TwoOptMove()
         count=0
+        # while the termination condition is not met, apply the local search operators
         while terminationCondition is False:
-
+            # initialize the operators object
             InitializeOperators(rm, sm, top)
             
-
+            # relocation move: get a customer and change its position in the route
             if operator == 0:
+                # find the best relocation move and store it in the rm object
                 FindBestRelocationMove(rm, route_list, cost_matrix)
+                # if the best relocation move improves the solution, apply it
                 if rm.moveCost < 0:
                     ApplyRelocationMove(rm, route_list)
                    
                     reloc = reloc + 1
                 else:
+                    # there cannot be any further improvement using the relocation move operator
                     terminationCondition = True
-                    
+            # swap move: get two customers and change their positions in the route
             elif operator == 1:
+                # find the best swap move and store it in the sm object
                 FindBestSwapMove(sm ,route_list, cost_matrix)
+                # if the best swap move improves the solution, apply it
                 if sm.moveCost < 0:
                     ApplySwapMove(sm, route_list)
                     
                     swaps = swaps +1
                 else:
+                    # there cannot be any further improvement using the swap move operator
                     terminationCondition = True
-                   
+            # 2-opt move: get two customers and reverse the segment between them: it is used to untangle the routes
             elif operator == 2:
+                # find the best 2-opt move and store it in the top object
                 FindBestTwoOptMove(top,route_list, cost_matrix)
+                # if the best 2-opt move improves the solution, apply it
                 if top.moveCost < 0:
                     ApplyTwoOptMove(top, route_list, cost_matrix)
                     
                     opt = opt + 1
                 else:
+                    # there cannot be any further improvement using the 2-opt move operator
                     terminationCondition = True
-                    
+            # pair insertion move: get a pair of customers and insert it in the route
             elif operator == 3:
                 best: PairInsertionMove = PairInsertion(pairlist, route_list, cost_matrix)
                 if best.profit_added > 0:
@@ -1012,39 +1066,39 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
                         opt = opt + 1
                 else:
                     terminationCondition = True
-                    
+            # 2-pair exchange move: get two pairs of customers and exchange them in the route 
             elif operator == 4:
                 best: PairInsertionMove = TwoPairExchange(route_list, cost_matrix, pairlist2, pairserved)
                 if best.profit_added > 0:
-                        
                         ApplyPairMoveServed(best, route_list)
-                        
                         opt = opt + 1
                 else:
                     terminationCondition = True
-                   
+            # two served one unserved move: replace two served customers with one unserved customer
             elif operator == 5:
+                # find the best two served one unserved move and store it in the PairInsertionMove object
                 best: PairInsertionMove = TwoServedOneUnservedExchange(route_list, cost_matrix, c_list, pairserved)
+                # if the best two served one unserved move improves the solution, apply it
                 if best.profit_added > 0:
-                        
                         ApplyPairMoveOneUnserved(best,route_list)
-                        
                         opt = opt + 1
                 else:
+                    # there cannot be any further improvement using the two served one unserved move operator
                     terminationCondition = True
-                   
+            # one served one unserved move: replace one served customer with one unserved customer
             elif operator == 6:
+                # find the best one served one unserved move and store it in the PairInsertionMove object
                 best: PairInsertionMove = OneServedOneUnservedExchange(route_list, cost_matrix, c_list)
+                # if the best one served one unserved move improves the solution, apply it
                 if best.profit_added > 0:
                         count=count+1
-                        
                         ApplyOneNodeMove(best, route_list)
-                       
+                        # add an upper bound to the number of iterations of this move 
                         opt = opt + 1
                         if count>3:
-                          terminationCondition = True
-                           
+                          terminationCondition = True      
                 else:
+                    # there cannot be any further improvement using the one served one unserved move operator
                     terminationCondition = True
                     
 
@@ -1062,14 +1116,19 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
        
 
 
-
+# created a first solution for the problem using the minimum cost insertion heuristic
 def solve(cust_list, route_list, cost_matrix):
     keep_going = True
+    # while there are customers that have not been inserted into a route
     while not_all_added(cust_list) and keep_going:
+        # find the best customer to insert in the list
         best = identifyMinimumCostInsertion(route_list,cust_list , cost_matrix)
+        # if we have found one: insert it else, stop
         if best.customer != None:
+            # add the customer to the route selected above
             InsertBestFit(best,route_list)
         else:
+            # the problem is infeasible
             keep_going = False
 
 
@@ -1646,14 +1705,16 @@ def randomRemoval(rt,cost_matrix,seed,route_list):
 
 
 
-
+# the function handles and calls them methods to solve the problem
 def solveProblem():
-   
+    
+    # create 6 empty routes
     route_list = getEmptyRoutes(6)
+    # get the customer data from the csv file
     cust_list = getCustomers("instance.csv")
-
+    # create the cost matrix, which is a 2D array containing the distance beteween each customer
     cost_matrix = getCost_Matrix(cust_list)
-
+    # get a first solution using the minimum insertion algorithm and a clever weighted index
     solve(cust_list, route_list, cost_matrix)
            
     
