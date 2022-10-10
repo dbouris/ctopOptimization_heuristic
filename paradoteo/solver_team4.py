@@ -158,35 +158,43 @@ class CandidatePairs:
 
 
 
-#  Methods
-
-
-
+#  calculate the distance between two customers in the cost matrix, which is a 2D array
 def getCost_Matrix(c_list):
     cost_matrix=[]
+    # add the first row of the cost matrix, which is the central depot of the problem
     c_list.insert(0,Customer(0,23.142,11.736,0,0,0,False))
+    # initialize the cost matrix with zeros in all positions
     rows = len(c_list)
     cost_matrix = [[0.0 for x in range(rows)] for y in range(rows)]
+    # iterate over all the pairs of customers
     for i in range(0, len(c_list)):
             for j in range(0, len(c_list)):
+                # calculate the distance between the two customers
                 a = c_list[i]
                 b = c_list[j]
+                # get the distance as the euclidean distance between the two customers
                 dist = math.sqrt(math.pow(a.x - b.x, 2) + math.pow(a.y - b.y, 2))
+                # update the cost matrix with the distance
                 cost_matrix[i][j] = dist
+    # remove the first row of the cost matrix, which is the central depot of the problem
     c_list.pop(0)
     return cost_matrix
 
-
+# reads the customers and their attributes from the csv file
 def getCustomers(txt_file):
-    
+    # get the rows of the csv file in a list
     rows = []
+    # open the csv file
     with open(txt_file, "r") as file:
         csvreader = csv.reader(file)
         for row in csvreader:
             rows.append(row)
     cust_list = []
+    # iterate over the rows of the csv file which contain customer data
     for i in range(11,347):
+        # create the customer object
         customer_obj = Customer(int(rows[i][0]),float(rows[i][1]),float(rows[i][2]),int(rows[i][3]),int(rows[i][4]),int(rows[i][5]), False)
+        # add the customer object to the list of customers
         cust_list.append(customer_obj)
     return cust_list
     
@@ -235,11 +243,13 @@ def identifyMinimumCostInsertion(rt_list,cust_list, cost_matrix):
                     continue
     return best_insertion
 
-
+# creates empty routes based on the nummber of trucks
+# each route starts and ends at the central depot
+# example empty route: [apothiki,apothiki]
 def getEmptyRoutes(trucks):
     apothiki = Customer(0,23.142,11.736,0,0,0,False)
     route_list = []
-
+    # iterate over the number of trucks and create a route for each truck
     for i in range(0,trucks):
         r = Route([apothiki,apothiki],0,i,0)
         route_list.append(r)
@@ -290,17 +300,19 @@ def InsertBestFit(best_fit,route_list):
     # mark the customer as added
     best_fit.customer.added = True
 
-
+# calculate the profit of each route in the list, and return a list with the profits
 def calclulateProfitRoute(route_list):
     profit = []
-
+    # iterate over the routes
     for i in route_list:
         prof = 0
+        # iterate over the customers in the route
         for k in i.route:
             prof += k.profit
         profit.append(prof)
     return profit
 
+# calculate the total profit of the solution, using the list of profit of each route
 def calclulatetotalProfit(prof):
     total_prof = 0
     for i in prof:
@@ -320,18 +332,14 @@ def getTransferCost(route_list, cost_matrix):
         transfer = transfer + transfer_cost
     return transfer
 
-def getServCost(route_list):
-    serv_cost = []
-    for i in route_list:
-        cost = 0
-        for k in i.route:
-            cost = cost + k.serv_time
-        serv_cost.append(cost)
-    return serv_cost
 
+# get the total service time of the customers in the solution
+# the service time contains the time needed to serve the customer and the time needed to transfer from the previous customer
 def gettotalServCost(route_list, cost_matrix):
         c = 0
+        # iterate over the routes
         for route in route_list:
+            # iterate over the customers in the route
             for j in range (0, len(route.route) - 1):
                 a = route.route[j]
                 b = route.route[j + 1]
@@ -384,20 +392,26 @@ def ApplySwapMoveTabu(sm, route_list, iterator):
     SetTabuIterator(b1, iterator)
     SetTabuIterator(b2, iterator)
 
+# apply the swap move to the solution
 def ApplySwapMove(sm, route_list):
-
+    # get the two routes
     rt1 = route_list[sm.positionOfFirstRoute]
     rt2 = route_list[sm.positionOfSecondRoute]
+    # get the two customers to be swapped
     b1 = rt1.route[sm.positionOfFirstNode]
     b2 = rt2.route[sm.positionOfSecondNode]
+    # swap the customers
     rt1.route[sm.positionOfFirstNode] = b2
     rt2.route[sm.positionOfSecondNode] = b1
-
+    # if the two routes are the same, update the time of the route, the capacity is not changed
     if (rt1 == rt2):
         rt1.time += sm.moveCost
+    # if the two routes are different, update the time and capacity of the two routes
     else:
+        # update time
         rt1.time += sm.timeChangeFirstRt
         rt2.time += sm.timeChangeSecondRt
+        # update capacity
         rt1.capacity = rt1.capacity - b1.demand + b2.demand
         rt2.capacity = rt2.capacity + b1.demand - b2.demand
         
@@ -463,7 +477,9 @@ def ApplyRelocationMove(rm, route_list):
             targetRt.capacity += B.demand
 
         
-
+# store the info for the swap move in the SwapMove object
+# keep the target, origin route
+# keep the target, origin node to be swapped
 def StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm):
     sm.positionOfFirstRoute = firstRouteIndex
     sm.positionOfSecondRoute = secondRouteIndex
