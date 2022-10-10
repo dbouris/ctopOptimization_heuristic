@@ -8,6 +8,7 @@ from itertools import combinations
 import pprint
 import random
 import timeit
+import tabu_search
 
 # Creation of classes
 
@@ -372,25 +373,6 @@ def DrawSolution(route_list, cust_list):
     SolDrawer.drawRoutes(route_list)
     SolDrawer.drawPointsUsed(cust_list)
 
-def ApplySwapMoveTabu(sm, route_list, iterator):
-
-    rt1 = route_list[sm.positionOfFirstRoute]
-    rt2 = route_list[sm.positionOfSecondRoute]
-    b1 = rt1.route[sm.positionOfFirstNode]
-    b2 = rt2.route[sm.positionOfSecondNode]
-    rt1.route[sm.positionOfFirstNode] = b2
-    rt2.route[sm.positionOfSecondNode] = b1
-
-    if (rt1 == rt2):
-        rt1.time += sm.moveCost
-    else:
-        rt1.time += sm.timeChangeFirstRt
-        rt2.time += sm.timeChangeSecondRt
-        rt1.capacity = rt1.capacity - b1.demand + b2.demand
-        rt2.capacity = rt2.capacity + b1.demand - b2.demand
-        
-    SetTabuIterator(b1, iterator)
-    SetTabuIterator(b2, iterator)
 
 # apply the swap move to the solution
 def ApplySwapMove(sm, route_list):
@@ -416,33 +398,6 @@ def ApplySwapMove(sm, route_list):
         rt2.capacity = rt2.capacity + b1.demand - b2.demand
         
 
-
-
-def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator):
-
-
-        originRt = route_list[rm.originRoutePosition]
-        targetRt = route_list[rm.targetRoutePosition]
-
-        B = originRt.route[rm.originNodePosition]
-
-        if originRt == targetRt:
-            del originRt.route[rm.originNodePosition]
-            if (rm.originNodePosition < rm.targetNodePosition):
-                targetRt.route.insert(rm.targetNodePosition, B)
-            else:
-                targetRt.route.insert(rm.targetNodePosition + 1, B)
-
-            originRt.time += rm.moveCost
-        else:
-            del originRt.route[rm.originNodePosition]
-            targetRt.route.insert(rm.targetNodePosition + 1, B)
-            originRt.time += rm.timeChangeOriginRt
-            targetRt.time += rm.timeChangeTargetRt
-            originRt.capacity -= B.demand
-            targetRt.capacity += B.demand
-
-        SetTabuIterator(B,localSearchIterator)
 
 # apply the relocation move on our current solution
 def ApplyRelocationMove(rm, route_list):
@@ -501,53 +456,7 @@ def StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
         rm.timeChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
 
-def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution):
-        for originRouteIndex in range(0, len(route_list)):
-            rt1 = route_list[originRouteIndex]
-            for targetRouteIndex in range (0, len(route_list)):
-                rt2 = route_list[targetRouteIndex]
-                #print("CHECKING ORIGIN: ", originRouteIndex, "TARGET: ", targetRouteIndex)
-                for originNodeIndex in range (1, len(rt1.route) - 1):
-                    for targetNodeIndex in range (0, len(rt2.route) - 1):
-                        
 
-                        if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
-                            continue
-
-                        A = rt1.route[originNodeIndex - 1]
-                        B = rt1.route[originNodeIndex]
-                        C = rt1.route[originNodeIndex + 1]
-
-                        F = rt2.route[targetNodeIndex]
-                        G = rt2.route[targetNodeIndex + 1]
-
-                        #print("SEND ", B.id, "TO: ", F.id)
-
-                        if originRouteIndex != targetRouteIndex:
-                            if rt2.capacity + B.demand > 150:
-                                #print("CAPACITY ISSUE AT ROUTE 2")
-                                continue
-
-                        costAdded = cost_matrix[A.id][C.id] + cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id]
-                        costRemoved = cost_matrix[A.id][B.id] + cost_matrix[B.id][C.id] + cost_matrix[F.id][G.id]
-
-                        originRtCostChange = cost_matrix[A.id][C.id] - cost_matrix[A.id][B.id] - cost_matrix[B.id][C.id] 
-                        targetRtCostChange = cost_matrix[F.id][B.id] + cost_matrix[B.id][G.id] - cost_matrix[F.id][G.id] + rt1.route[originNodeIndex].serv_time
-
-                        if rt2.time + targetRtCostChange > 200:
-                            continue 
-                        
-                       
-                       
-                        moveCost = costAdded - costRemoved
-                        #print(moveCost)
-                        
-                        if (MoveIsTabu(B, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution)):
-                            
-                            continue
-                        
-                        if (moveCost < rm.moveCost):
-                            StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
 #  find the best relocation move for the current solution   
 def FindBestRelocationMove(rm, route_list, cost_matrix):
         # iterate over all the routes in the solution as the origin route
@@ -596,88 +505,6 @@ def FindBestRelocationMove(rm, route_list, cost_matrix):
                         if (moveCost < rm.moveCost):
                             StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
         
-
-
-def FindBestSwapMoveTabu(sm, route_list, cost_matrix, localSearchIterator, bestSolution):
-        for firstRouteIndex in range(0, len(route_list)):
-            rt1 = route_list[firstRouteIndex]
-            for secondRouteIndex in range (firstRouteIndex,len(route_list)):
-                #print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
-                rt2 = route_list[secondRouteIndex]
-                for firstNodeIndex in range (1, len(rt1.route) - 1):
-                    startOfSecondNodeIndex = 1
-                    if rt1 == rt2:
-                        startOfSecondNodeIndex = firstNodeIndex + 1
-                    for secondNodeIndex in range (startOfSecondNodeIndex, len(rt2.route) - 1):
-
-                        
-                        a1 = rt1.route[firstNodeIndex - 1]
-                        b1 = rt1.route[firstNodeIndex]
-                        c1 = rt1.route[firstNodeIndex + 1]
-
-                        a2 = rt2.route[secondNodeIndex - 1]
-                        b2 = rt2.route[secondNodeIndex]
-                        c2 = rt2.route[secondNodeIndex + 1]
-
-                        #print("CHECKING:", b1.id , "WITH: ", b2.id)
-                        moveCost = None
-                        costChangeFirstRoute = None
-                        costChangeSecondRoute = None
-
-                        if rt1 == rt2:
-                            if firstNodeIndex == secondNodeIndex - 1:
-                                costRemoved = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][b2.id] + cost_matrix[b2.id][c2.id]
-                                costAdded = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][b1.id] + cost_matrix[b1.id][c2.id]
-                                moveCost = costAdded - costRemoved
-
-
-                            else:
-
-                                costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
-                                costAdded1 = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][c1.id]
-                                costRemoved2 = cost_matrix[a2.id][b2.id] + cost_matrix[b2.id][c2.id]
-                                costAdded2 = cost_matrix[a2.id][b1.id] + cost_matrix[b1.id][c2.id]
-                                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                            
-                            #check for time violation
-                            if rt1.time + moveCost > 200:
-                                continue
-                        
-                        else:
-                            if rt1.capacity - b1.demand + b2.demand > 150:
-                                #print("DOES NOT FIT IN R1")
-                                continue
-                            if rt2.capacity - b2.demand + b1.demand > 150:
-                                #print("DOES NOT FIT IN R2")
-                                continue
-
-                            costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
-                            costAdded1 = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][c1.id]
-                            costRemoved2 = cost_matrix[a2.id][b2.id] + cost_matrix[b2.id][c2.id]
-                            costAdded2 = cost_matrix[a2.id][b1.id] + cost_matrix[b1.id][c2.id]
-
-                            costChangeFirstRoute = costAdded1 - costRemoved1  + b2.serv_time - b1.serv_time
-                            costChangeSecondRoute = costAdded2 - costRemoved2 + b1.serv_time - b2.serv_time
-                            
-                            if rt1.time + costChangeFirstRoute > 200:
-                                #print("TIME 1: ", rt1.time + costChangeFirstRoute)
-                                #print("TIME VIOLATION IN ROUTE 1")
-                                continue
-
-                            if rt2.time + costChangeSecondRoute > 200:
-                                #print("TIME 1: ", rt2.time + costChangeSecondRoute)
-                                #print("TIME VIOLATION IN ROUTE 2")
-                                continue
-
-                            moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                            
-
-                        if MoveIsTabu(b1, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(b2, localSearchIterator, moveCost, route_list, cost_matrix, bestSolution):
-                            
-                            continue
-
-                        if moveCost < sm.moveCost:
-                            StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
 def FindBestSwapMove(sm, route_list, cost_matrix):
         for firstRouteIndex in range(0, len(route_list)):
@@ -787,76 +614,6 @@ def StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
     top.moveCost = moveCost
 
 
-def FindBestTwoOptMoveTabu(top, route_list, cost_matrix, iterator, bestSolution):
-        for rtInd1 in range(0, len(route_list)):
-            rt1 = route_list[rtInd1]
-            for rtInd2 in range(rtInd1, len(route_list)):
-                rt2 = route_list[rtInd2]
-                #print("CHECKING ROUTE: ", rtInd1, "WITH: ", rtInd2)
-                for nodeInd1 in range(0, len(rt1.route) - 1):
-                    start2 = 0
-                    if (rt1 == rt2):
-                        start2 = nodeInd1 + 2
-
-                    for nodeInd2 in range(start2, len(rt2.route) - 1):
-                        moveCost = 10 ** 9
-
-                        A = rt1.route[nodeInd1]
-                        B = rt1.route[nodeInd1 + 1]
-                        K = rt2.route[nodeInd2]
-                        L = rt2.route[nodeInd2 + 1]
-                        
-                        #print("WORKING FOR NODES: ", A.id, "AND ", K.id)
-
-                        if rt1 == rt2:
-                            if nodeInd1 == 0 and nodeInd2 == len(rt1.route) - 2:
-                                continue
-                            costAdded = cost_matrix[A.id][K.id] + cost_matrix[B.id][L.id]
-                            costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
-                            moveCost = costAdded - costRemoved
-                            # check time violations
-                            if rt1.time + moveCost > 200:
-                                continue
-
-
-
-                        else:
-                            if nodeInd1 == 0 and nodeInd2 == 0:
-                                continue
-                            if nodeInd1 == len(rt1.route) - 2 and  nodeInd2 == len(rt2.route) - 2:
-                                continue
-
-                            if CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
-                                #print("CAPACITY VIOLATION")
-                                continue
-                            costAdded = cost_matrix[A.id][L.id] + cost_matrix[B.id][K.id]
-                            costRemoved = cost_matrix[A.id][B.id] + cost_matrix[K.id][L.id]
-                            moveCost = costAdded - costRemoved
-                            
-                            #check time constraints
-                            relocatedSegmentOfRt1 = rt1.route[nodeInd1 + 1 :]
-                            relocatedSegmentOfRt2 = rt2.route[nodeInd2 + 1 :]
-
-                            TimeReloc1 = getTimeInRoute(relocatedSegmentOfRt1, cost_matrix)
-                            remaining1 = rt1.time - TimeReloc1
-
-                            TimeReloc2 = getTimeInRoute(relocatedSegmentOfRt2, cost_matrix)
-                            remaining2 = rt2.time - TimeReloc2
-
-                            if remaining1 + TimeReloc2 - cost_matrix[A.id][B.id] + cost_matrix[A.id][L.id] > 200:
-                                continue
-                            if remaining2 + TimeReloc1 - cost_matrix[K.id][L.id] +  cost_matrix[B.id][K.id] > 200:
-                                continue
-
-                        #print(moveCost)
-                        if MoveIsTabu(A, iterator, moveCost, route_list, cost_matrix, bestSolution) or MoveIsTabu(K, iterator, moveCost,route_list, cost_matrix, bestSolution):
-                            
-                            continue   
-
-                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
-                            StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
-
-
 def FindBestTwoOptMove(top, route_list, cost_matrix):
         for rtInd1 in range(0, len(route_list)):
             rt1 = route_list[rtInd1]
@@ -923,44 +680,6 @@ def FindBestTwoOptMove(top, route_list, cost_matrix):
                             StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
 
-def ApplyTwoOptMoveTabu(top, route_list, cost_matrix, iterator):
-    rt1 = route_list[top.positionOfFirstRoute]
-    rt2 = route_list[top.positionOfSecondRoute]
-
-    if rt1 == rt2:
-        # reverses the nodes in the segment [positionOfFirstNode + 1,  top.positionOfSecondNode]
-        reversedSegment = reversed(rt1.route[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1])
-        #lst = list(reversedSegment)
-        #lst2 = list(reversedSegment)
-        rt1.route[top.positionOfFirstNode + 1 : top.positionOfSecondNode + 1] = reversedSegment
-
-        #reversedSegmentList = list(reversed(rt1.route[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1]))
-        #rt1.route[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1] = reversedSegmentList
-
-        SetTabuIterator(rt1.route[top.positionOfFirstNode], iterator)
-        SetTabuIterator(rt1.route[top.positionOfSecondNode], iterator)
-
-        rt1.time += top.moveCost
-
-    else:
-        #slice with the nodes from position top.positionOfFirstNode + 1 onwards
-        relocatedSegmentOfRt1 = rt1.route[top.positionOfFirstNode + 1 :]
-
-        #slice with the nodes from position top.positionOfFirstNode + 1 onwards
-        relocatedSegmentOfRt2 = rt2.route[top.positionOfSecondNode + 1 :]
-
-        del rt1.route[top.positionOfFirstNode + 1 :]
-        del rt2.route[top.positionOfSecondNode + 1 :]
-
-        rt1.route.extend(relocatedSegmentOfRt2)
-        rt2.route.extend(relocatedSegmentOfRt1)
-
-        SetTabuIterator(rt1.route[top.positionOfFirstNode], iterator)
-        SetTabuIterator(rt2.route[top.positionOfSecondNode], iterator)
-
-        #lathooooos
-        UpdateRouteCostAndLoad(rt1, cost_matrix)
-        UpdateRouteCostAndLoad(rt2, cost_matrix)
 
 def ApplyTwoOptMove(top, route_list, cost_matrix):
     rt1 = route_list[top.positionOfFirstRoute]
@@ -1623,21 +1342,21 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
         
         # Relocations
         if operator == 0:
-            FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
+            tabu_search.FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix, bestSolution)
             if rm.originRoutePosition is not None:
-                ApplyRelocationMoveTabu(rm, route_list, localSearchIterator)
+                tabu_search.ApplyRelocationMoveTabu(rm, route_list, localSearchIterator)
                 
                 
         # Swaps
         elif operator == 1:
-            FindBestSwapMoveTabu(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
+            tabu_search.FindBestSwapMoveTabu(sm,route_list, cost_matrix, localSearchIterator, bestSolution)
             if sm.positionOfFirstRoute is not None:
-                ApplySwapMoveTabu(sm, route_list, localSearchIterator)
+                tabu_search.ApplySwapMoveTabu(sm, route_list, localSearchIterator)
                 
         elif operator == 2:
-            FindBestTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, bestSolution)
+            tabu_search.FindBestTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator, bestSolution)
             if top.positionOfFirstRoute is not None:
-                ApplyTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator)
+                tabu_search.ApplyTwoOptMoveTabu(top,route_list, cost_matrix, localSearchIterator)
                 
 
         # self.ReportSolution(self.sol)
@@ -1673,18 +1392,6 @@ def TabuSearch(operator, route_list, cost_matrix, cust_list):
     # SolDrawer.drawTrajectory(solution_cost_trajectory)
 
     route_list = copy.deepcopy(bestSolution)
-
-def MoveIsTabu(n, iterator, moveCost, route_list, cost_matrix, bestSolution):
-        if moveCost + getTransferCost(route_list, cost_matrix) < getTransferCost(bestSolution, cost_matrix) - 0.001:
-            return False
-        if iterator < n.isTabuTillIterator:
-            return True
-        return False
-
-def SetTabuIterator(n, iterator):
-    # n.isTabuTillIterator = iterator + self.tabuTenure
-    n.isTabuTillIterator = iterator + random.randint(50, 60)
-
 
 
 def randomRemoval(rt,cost_matrix,seed,route_list):
