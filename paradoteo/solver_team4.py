@@ -333,39 +333,22 @@ def getTransferCost(route_list, cost_matrix):
     return transfer
 
 
-# get the total service time of the customers in the solution
-# the service time contains the time needed to serve the customer and the time needed to transfer from the previous customer
-def gettotalServCost(route_list, cost_matrix):
-        c = 0
-        # iterate over the routes
-        for route in route_list:
-            # iterate over the customers in the route
-            for j in range (0, len(route.route) - 1):
-                a = route.route[j]
-                b = route.route[j + 1]
-                c += cost_matrix[a.id][b.id]
-        return c
-
+# calculate the time cost of a route
+# the time in each route consists of the time of the customers in the route (service time) 
+# and the transfer time
 def getTimeInRoute(route, cost_matrix):
     c = 0
+    # iterate over the customers in the route
     for j in range (0, len(route) - 1):
         a = route[j]
         b = route[j + 1]
+        # get the transfer time between the customers
         c += cost_matrix[a.id][b.id]
+        # add the service time of the customer
         c += a.serv_time
     return c
 
-
-def gettotalTime(cost_matrix, route):
-    c = 0
-    for j in range (0, len(route.route) - 1):
-        a = route.route[j]
-        b = route.route[j + 1]
-        c += cost_matrix[a.id][b.id] + a.serv_time
-    return c 
         
-
-
 
 
 def DrawSolution(route_list, cust_list):
@@ -415,7 +398,6 @@ def ApplySwapMove(sm, route_list):
         rt1.capacity = rt1.capacity - b1.demand + b2.demand
         rt2.capacity = rt2.capacity + b1.demand - b2.demand
         
-
 
 
 def ApplyRelocationMoveTabu(rm, route_list, localSearchIterator):
@@ -548,6 +530,7 @@ def FindBestRelocationMoveTabu(rm, localSearchIterator, route_list, cost_matrix,
                         
                         if (moveCost < rm.moveCost):
                             StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
+
 #  find the best relocation move for the current solution   
 def FindBestRelocationMove(rm, route_list, cost_matrix):
         # iterate over all the routes in the solution as the origin route
@@ -679,80 +662,87 @@ def FindBestSwapMoveTabu(sm, route_list, cost_matrix, localSearchIterator, bestS
                         if moveCost < sm.moveCost:
                             StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
+# find the best move and store it in the best move object
 def FindBestSwapMove(sm, route_list, cost_matrix):
+    # loop through all routes, as the first route
         for firstRouteIndex in range(0, len(route_list)):
             rt1 = route_list[firstRouteIndex]
+            # loop through all routes, as the second route
             for secondRouteIndex in range (firstRouteIndex,len(route_list)):
                 #print("CHECKING ROUTE: ", firstRouteIndex, "WITH: ", secondRouteIndex)
                 rt2 = route_list[secondRouteIndex]
+                # loop through all nodes in the first route, as the first node
                 for firstNodeIndex in range (1, len(rt1.route) - 1):
                     startOfSecondNodeIndex = 1
+                    # if the first and second route are the same, we can't swap the first node with itself
+                    # so start from the second node
                     if rt1 == rt2:
                         startOfSecondNodeIndex = firstNodeIndex + 1
+                    # loop through all nodes in the second route, as the second node
                     for secondNodeIndex in range (startOfSecondNodeIndex, len(rt2.route) - 1):
 
-                        
+                        # get the first node, the previous node and the next node
                         a1 = rt1.route[firstNodeIndex - 1]
                         b1 = rt1.route[firstNodeIndex]
                         c1 = rt1.route[firstNodeIndex + 1]
 
+                        # get the second node, the previous node and the next node
                         a2 = rt2.route[secondNodeIndex - 1]
                         b2 = rt2.route[secondNodeIndex]
                         c2 = rt2.route[secondNodeIndex + 1]
 
-                        #print("CHECKING:", b1.id , "WITH: ", b2.id)
+                        # calculate the cost of the move
                         moveCost = None
                         costChangeFirstRoute = None
                         costChangeSecondRoute = None
 
+                        # if the first and second route are the same
                         if rt1 == rt2:
+                            # if the nodes are consecutive
                             if firstNodeIndex == secondNodeIndex - 1:
+                                # calculate the cost of the move
                                 costRemoved = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][b2.id] + cost_matrix[b2.id][c2.id]
                                 costAdded = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][b1.id] + cost_matrix[b1.id][c2.id]
                                 moveCost = costAdded - costRemoved
 
 
                             else:
-
+                                # calculate the cost of the move, mind that there will be two changes in the route
+                                # and thus two removals and two additions
                                 costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
                                 costAdded1 = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][c1.id]
                                 costRemoved2 = cost_matrix[a2.id][b2.id] + cost_matrix[b2.id][c2.id]
                                 costAdded2 = cost_matrix[a2.id][b1.id] + cost_matrix[b1.id][c2.id]
                                 moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                             
-                            #check for time violation
+                            # check for time violation
                             if rt1.time + moveCost > 200:
                                 continue
-                        
+                        # if the first and second route are different
                         else:
+                            # check if the move is feasible capacity wise for both the routes
                             if rt1.capacity - b1.demand + b2.demand > 150:
-                                #print("DOES NOT FIT IN R1")
                                 continue
                             if rt2.capacity - b2.demand + b1.demand > 150:
-                                #print("DOES NOT FIT IN R2")
                                 continue
-
+                            # as above, there will be two cost additions and two removals
                             costRemoved1 = cost_matrix[a1.id][b1.id] + cost_matrix[b1.id][c1.id]
                             costAdded1 = cost_matrix[a1.id][b2.id] + cost_matrix[b2.id][c1.id]
                             costRemoved2 = cost_matrix[a2.id][b2.id] + cost_matrix[b2.id][c2.id]
                             costAdded2 = cost_matrix[a2.id][b1.id] + cost_matrix[b1.id][c2.id]
-
+                            # calculate the cost of the move on both the routes
                             costChangeFirstRoute = costAdded1 - costRemoved1  + b2.serv_time - b1.serv_time
                             costChangeSecondRoute = costAdded2 - costRemoved2 + b1.serv_time - b2.serv_time
                             
+                            # check for time violation on both  the routes
                             if rt1.time + costChangeFirstRoute > 200:
-                                #print("TIME 1: ", rt1.time + costChangeFirstRoute)
-                                #print("TIME VIOLATION IN ROUTE 1")
                                 continue
-
                             if rt2.time + costChangeSecondRoute > 200:
-                                #print("TIME 1: ", rt2.time + costChangeSecondRoute)
-                                #print("TIME VIOLATION IN ROUTE 2")
                                 continue
-
+                            # calculate the overall cost of the move
                             moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                             
-
+                        # if the move is better than the best move so far, store it
                         if moveCost < sm.moveCost:
                             StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
@@ -779,6 +769,7 @@ def CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
 
         return False
 
+# keep the two opt move details in the best move object
 def StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
     top.positionOfFirstRoute = rtInd1
     top.positionOfSecondRoute = rtInd2
@@ -1121,7 +1112,7 @@ def LocalSearch(operator, route_list, cost_matrix, pairlist,pairlist2, pairserve
             
 
 
-           
+
             bestSolution = copy.deepcopy(route_list)
             prof = calclulateProfitRoute(bestSolution)
             total_prof = calclulatetotalProfit(prof)
@@ -1158,30 +1149,34 @@ profit_weight = 0.56
 demand_weight = 0.12
 time_weight = 0.32
 
-
+# get all the possible pairs of customers which are not served
 def generatePairs(cust_list):
     customers = []
     for x in cust_list:
         if (x.added == False):
             customers.append(x)
-
+    # get all the size:2 combinations of customers
     combinationPairs = combinations(customers, 2)
 
     pairs = []
+    # create the pairs of the customers as objects
     for x in combinationPairs:
         candidate = CandidatePairs(x)
         pairs.append(candidate)
 
     return pairs
 
+# generate all the possible pairs of customers which are served
 def generateServedPairs(cust_list):
+    # get all the customers which are served
     customers = []
     for x in cust_list:
         if (x.added == True):
             customers.append(x)
-
+    # get all the size:2 combinations of customers
     combinationPairs = combinations(customers, 2)
 
+    # create the pairs objects and return them
     pairs = []
     for x in combinationPairs:
         candidate = CandidatePairs(x)
@@ -1274,30 +1269,27 @@ def ApplyDestroy(best : PairInsertionMove,route_list):
 
 
 
-
+# find the best pair insertion move
 def PairInsertion(pairlist, route_list, cost_matrix):
     
+    # initialize the best move object
     best = PairInsertionMove()
+    # iterate over all the pairs in the list
     for pair in pairlist:
-        #print("THE PAIR EVALUATING IS: ", pair.customers[0].id, pair.customers[1].id)
+        # if both the customers are not added
         if pair.customers[0].added == False and pair.customers[1].added == False:
+            # iterate over all the routes
             for route in route_list:
                 rt = route.route
-                #print("CHECKING ROUTE: ")
-                #for i in rt:
-                #    print(i.id ,end = " ")
-                # print()
-
+                # iterate over all the positions in the route
                 for nodeIndextoremove in range(1,len(route.route)-1):
-                    #print("NODE TO REMOVE IS: ", rt[nodeIndextoremove].id)
-                    #check if the profit of the pair is better
+                    # check if the profit to be added is greater than the profit to be removed
                     if pair.totalProfit >  rt[nodeIndextoremove].profit:
-                        #check if the pair can fit in the route demand wise
+                        # check if the pair can fit in the route demand wise
                         if route.capacity - rt[nodeIndextoremove].demand + pair.totalDemand > 150:
-                            #print("CAPACITY ISSUE")
                             continue
-                        if route.time - rt[nodeIndextoremove].serv_time + pair.totalServiceTime > 200 :
-                            #print("CAPACITY ISSUE")
+                        # check if the pair can fit in the route time wise
+                        if route.time - rt[nodeIndextoremove].serv_time + pair.totalServiceTime > 200:
                             continue
                         
                         candidateroute = route.route[1:len(route.route)-1]
@@ -1307,12 +1299,10 @@ def PairInsertion(pairlist, route_list, cost_matrix):
                         
 
                         newrt = getEmptyRoutes(1)[0]
-                        #print("CANDIDATE ROUTE: ")
                         for i in candidateroute:
                             i.added = False
-                            #print(i.id, end = " ")
-                        #print()
-                        
+
+                        # find the best position for the 2 customers to be inserted
                         for i in range(0,len(candidateroute)):
                             best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
                             ApplyInsertion(newrt, best_inser)
@@ -1321,21 +1311,13 @@ def PairInsertion(pairlist, route_list, cost_matrix):
                         pair.customers[1].added = False
                         
                         
-                        #check if the newroute's time is OK
-                        
-                        # print("THE NEW ROUTE TO EVALUATE IS: ")
-                        # for i in newrt.route:
-                        #     print(i.id ,end = " ")
-                        # print()
+                        # calculate the profit change
                         profit =  pair.totalProfit - rt[nodeIndextoremove].profit 
-
+                        # check if the change is feasible time wise
                         if newrt.time > 200:
-                            #print(gettotalTime(cost_matrix, newrt))
-                            # print("THE TIME IS: ", newrt.time)
-                            # print("                                                             THE NEW ROUTES TIME IS NOT OK ")
                             continue
                         
-                        #print("                                                                     WE HAVE A NEW ROUTE")
+                        # if the change is feasible, check if it is better than the best move we have stored                                                 
                         if profit > best.profit_added:
                             best.profit_added = profit
                             best.route = route.id
@@ -1344,100 +1326,114 @@ def PairInsertion(pairlist, route_list, cost_matrix):
                             best.pair_added = pair
                             best.nodetoremove = rt[nodeIndextoremove]
                             best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - rt[nodeIndextoremove].demand
-                            
+    # return the best move                            
     return best
            
-    
+# find the best two pair exchange move    
 def TwoPairExchange(route_list, cost_matrix, pairlist, pairserved): 
+    # initialize the best move object
     best = PairInsertionMove()
-    for pair in pairlist:       
+    # iterate over all the pairs in the list
+    for pair in pairlist:
+        # check if both the customers are not added       
         if pair.customers[0].added == False and pair.customers[1].added == False:
-            for i in range(0,len(route_list)-1):                                
+            # iterate over all the routes
+            for i in range(0,len(route_list)-1):
+                # iterate over all the pairs in the route                              
                 for pserved in pairserved[i]:
+                    # check if both the customers are added, debug...
                     if pserved.customers[0].added == True and pserved.customers[1].added == True:
-                         if pair.totalProfit >  pserved.totalProfit: 
-                             
-                             if route_list[i].capacity - pserved.totalDemand + pair.totalDemand > 150:
-                                 #print("CAPACITY ISSUE")
-                                 continue
-                             
-                             if route_list[i].time - pserved.totalServiceTime + pair.totalServiceTime > 200 :
-                                 #print("CAPACITY ISSUE")
-                                 continue
+                        # check if the profit to be added is greater than the profit to be removed
+                        if pair.totalProfit >  pserved.totalProfit: 
+                            # check if the pair can fit in the route demand wise
+                            if route_list[i].capacity - pserved.totalDemand + pair.totalDemand > 150:
+                                continue
+                            # check if the pair can fit in the route time wise
+                            if route_list[i].time - pserved.totalServiceTime + pair.totalServiceTime > 200 :
+                                continue
                             
-                             candidateroute = route_list[i].route[1:len(route_list[i].route)-1] 
-                             if ( not pserved.customers[0] in route_list[i].route) or (not pserved.customers[1] in route_list[i].route):
-                                 continue
-                             candidateroute.remove(pserved.customers[0])
-                             candidateroute.remove(pserved.customers[1])                             
-                             for k in pair.customers:
-                                 candidateroute.append(k)
-                             newrt = getEmptyRoutes(1)[0]
-                             for c in candidateroute:
-                                 c.added = False
-                             for j in range(0,len(candidateroute)):
-                                 best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
-                                 ApplyInsertion(newrt, best_inser)
-                             pair.customers[0].added = False
-                             pair.customers[1].added = False
-                             profit =  pair.totalProfit - pserved.totalProfit
-                            
-                             if newrt.time > 200:
-                                 continue                             
-                             if profit > best.profit_added:                                 
-                                 best.profit_added = profit 
-                                 best.route = route_list[i].id
-                                 best.route_list = newrt.route
-                                 best.route_time = newrt.time
-                                 best.pair_added = pair
-                                 best.pservedremove = pserved
-                                 best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - (pserved.customers[0].demand + pserved.customers[1].demand)
-                                 
+                            candidateroute = route_list[i].route[1:len(route_list[i].route)-1] 
+                            if (not pserved.customers[0] in route_list[i].route) or (not pserved.customers[1] in route_list[i].route):
+                                continue
+                            # remove the pair to be removed
+                            candidateroute.remove(pserved.customers[0])
+                            candidateroute.remove(pserved.customers[1])                             
+                            # add the pair to be added
+                            for k in pair.customers:
+                                candidateroute.append(k)
+                            newrt = getEmptyRoutes(1)[0]
+                            for c in candidateroute:
+                                c.added = False
+                            # find the best position for the 2 customers to be inserted
+                            for j in range(0,len(candidateroute)):
+                                best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                                ApplyInsertion(newrt, best_inser)
+                            pair.customers[0].added = False
+                            pair.customers[1].added = False
+                            profit =  pair.totalProfit - pserved.totalProfit
+                            # check if the change is feasible time wise
+                            if newrt.time > 200:
+                                continue   
+                            # if the change is feasible, check if it is better than the best move we have stored                         
+                            if profit > best.profit_added:                                 
+                                best.profit_added = profit 
+                                best.route = route_list[i].id
+                                best.route_list = newrt.route
+                                best.route_time = newrt.time
+                                best.pair_added = pair
+                                best.pservedremove = pserved
+                                best.capacity_change = pair.customers[0].demand + pair.customers[1].demand - (pserved.customers[0].demand + pserved.customers[1].demand)
+                                
     return best
 
-
+# find the best change for one served and one unserved customer
 def OneServedOneUnservedExchange(route_list, cost_matrix, c_list): 
+    # initialize the best move object
     best = PairInsertionMove()
-    for c in c_list:       
+    # iterate over all customers
+    for c in c_list:
+        # check if the customer is not added       
         if c.added == False:
+            # iterate over all the routes
             for rt in route_list:
+                # iterate over all the customers in the route which are served
                 for served in rt.route:
                     if served.added == True:
+                        # check if the profit to be added is greater than the profit to be removed
                         if c.profit >  served.profit:
-                             if rt.capacity - served.demand + c.demand > 150:
-                                 #print("CAPACITY ISSUE")
-                                 continue
-                             
-                             if rt.time - served.serv_time + c.serv_time > 200 :
-                                 #print("CAPACITY ISSUE")
-                                 continue
-                             
-                             candidateroute = rt.route[1:len(rt.route)-1]                             
-                             candidateroute.remove(served)
-                             candidateroute.append(c)
-                             newrt = getEmptyRoutes(1)[0]
-                             for cand in candidateroute:
-                                 cand.added = False
-                             for j in range(0,len(candidateroute)):
-                                 best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
-                                 ApplyInsertion(newrt, best_inser)
-                             c.added=False
-                             profit =  c.profit - served.profit                           
-                             if newrt.time > 200:                                 
-                                 continue
-                             if profit > best.profit_added:                                 
-                                 best.profit_added = profit 
-                                 best.route = rt.id
-                                 best.route_list = newrt.route
-                                 best.route_time = newrt.time
-                                 best.nodetoadd = c
-                                 best.nodetoremove = served
-                                 best.capacity_change = c.demand  - served.demand
-                                                    
-                        
-                
-                               
-                
+                            # check if the customer can fit in the route demand wise
+                            if rt.capacity - served.demand + c.demand > 150:
+                                continue
+                            # check if the customer can fit in the route time wise
+                            if rt.time - served.serv_time + c.serv_time > 200 :
+                                continue
+                            
+                            candidateroute = rt.route[1:len(rt.route)-1]                             
+                            candidateroute.remove(served)
+                            candidateroute.append(c)
+                            newrt = getEmptyRoutes(1)[0]
+                            for cand in candidateroute:
+                                cand.added = False
+                            # find the best position for the customer to be inserted
+                            for j in range(0,len(candidateroute)):
+                                best_inser = IdentifyMinimumCostInsertionInRoute(newrt,candidateroute, cost_matrix)
+                                ApplyInsertion(newrt, best_inser)
+                            c.added=False
+                            # calculate the profit change
+                            profit =  c.profit - served.profit    
+                            # check if the change is feasible time wise                       
+                            if newrt.time > 200:                                 
+                                continue
+                            # if the change is feasible, check if it is better than the best move we have stored
+                            if profit > best.profit_added:                                 
+                                best.profit_added = profit 
+                                best.route = rt.id
+                                best.route_list = newrt.route
+                                best.route_time = newrt.time
+                                best.nodetoadd = c
+                                best.nodetoremove = served
+                                best.capacity_change = c.demand  - served.demand
+    # return the best move                                 
     return best
 
 
