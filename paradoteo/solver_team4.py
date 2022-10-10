@@ -1537,11 +1537,5 @@ def solveProblem():
     export_txt(route_list, total_prof)
 
 
-    
-
-   
-   
-       
-
-
-solveProblem()
+if __name__ == "__main__":
+    solveProblem()
