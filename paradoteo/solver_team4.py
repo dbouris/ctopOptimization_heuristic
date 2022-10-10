@@ -1531,7 +1531,7 @@ def VND_PROFIT(route_list, cost_matrix, pairlist, pairlist2, pairserved, c_list)
 
 def TabuSearch(operator, route_list, cost_matrix, cust_list):
     solution_cost_trajectory = []
-    random.seed(1)
+    random.seed(30)
     bestSolution = copy.deepcopy(route_list)
     terminationCondition = False
     localSearchIterator = 0
